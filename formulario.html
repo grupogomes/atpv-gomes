@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solicitação de ATPV</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f1a;
+    --surface: #111827;
+    --border: #1e293b;
+    --accent: #3b82f6;
+    --accent2: #06b6d4;
+    --text: #f1f5f9;
+    --muted: #64748b;
+    --success: #10b981;
+    --error: #ef4444;
+    --input-bg: #0f172a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -40%;
+    right: -20%;
+    width: 700px;
+    height: 700px;
+    background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -30%;
+    left: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(6,182,212,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 56px;
+    animation: fadeDown 0.7s ease both;
+  }
+
+  .logo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(6,182,212,0.1));
+    border: 1px solid rgba(59,130,246,0.3);
+    border-radius: 999px;
+    padding: 6px 18px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 24px;
+  }
+
+  .logo-badge::before {
+    content: '';
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent2);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #f1f5f9 30%, #60a5fa 70%, #22d3ee 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 15px;
+    font-weight: 300;
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px;
+    margin-bottom: 20px;
+    animation: fadeUp 0.6s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0.5;
+  }
+
+  .section:nth-child(2) { animation-delay: 0.1s; }
+  .section:nth-child(3) { animation-delay: 0.2s; }
+  .section:nth-child(4) { animation-delay: 0.3s; }
+  .section:nth-child(5) { animation-delay: 0.4s; }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+  }
+
+  .section-icon {
+    width: 28px; height: 28px;
+    background: rgba(59,130,246,0.1);
+    border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .grid { display: grid; gap: 20px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  .field { display: flex; flex-direction: column; gap: 8px; }
+
+  label {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  label .req {
+    color: var(--accent);
+    margin-left: 3px;
+  }
+
+  input, textarea, select {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 13px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s ease;
+    width: 100%;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+    background: #0d1629;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: #334155;
+  }
+
+  input.uppercase { text-transform: uppercase; }
+
+  textarea { resize: vertical; min-height: 80px; }
+
+  .tipo-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .tipo-btn {
+    padding: 16px;
+    border-radius: 14px;
+    border: 2px solid var(--border);
+    background: var(--input-bg);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .tipo-btn .icon { font-size: 22px; display: block; margin-bottom: 6px; }
+
+  .tipo-btn:hover {
+    border-color: rgba(59,130,246,0.4);
+    color: var(--text);
+  }
+
+  .tipo-btn.active {
+    border-color: var(--accent);
+    background: rgba(59,130,246,0.08);
+    color: var(--accent);
+    box-shadow: 0 0 20px rgba(59,130,246,0.1);
+  }
+
+  .tipo-panel { display: none; }
+  .tipo-panel.active { display: block; animation: fadeUp 0.3s ease; }
+
+  .submit-area {
+    margin-top: 36px;
+    text-align: center;
+    animation: fadeUp 0.6s 0.5s ease both;
+  }
+
+  .submit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    border: none;
+    border-radius: 14px;
+    padding: 18px 52px;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 32px rgba(59,130,246,0.25);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .submit-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(59,130,246,0.35);
+  }
+
+  .submit-btn:hover::before { opacity: 1; }
+  .submit-btn:active { transform: translateY(0); }
+
+  .submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .submit-note {
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .success-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10,15,26,0.95);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+  }
+
+  .success-overlay.show { display: flex; animation: fadeIn 0.4s ease; }
+
+  .success-icon {
+    width: 80px; height: 80px;
+    background: rgba(16,185,129,0.1);
+    border: 2px solid var(--success);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    margin-bottom: 28px;
+    animation: scaleIn 0.5s 0.2s ease both;
+  }
+
+  .success-overlay h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--success);
+    margin-bottom: 12px;
+  }
+
+  .success-overlay p {
+    color: var(--muted);
+    max-width: 360px;
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+
+  .new-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .new-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .error-msg {
+    font-size: 12px;
+    color: var(--error);
+    margin-top: 4px;
+    display: none;
+  }
+
+  input.invalid, textarea.invalid {
+    border-color: var(--error);
+  }
+
+  .confirm-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10,15,26,0.92);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .confirm-overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+
+  .confirm-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    animation: fadeUp 0.3s ease;
+  }
+
+  .confirm-icon { font-size: 40px; margin-bottom: 16px; }
+
+  .confirm-box h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .confirm-box > p {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+
+  .confirm-dados {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: left;
+    margin-bottom: 28px;
+  }
+
+  .confirm-dados .linha {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    gap: 12px;
+  }
+
+  .confirm-dados .linha:last-child { border-bottom: none; }
+  .confirm-dados .linha .rotulo { color: var(--muted); font-size: 12px; flex-shrink: 0; }
+  .confirm-dados .linha .valor { color: var(--text); font-weight: 500; text-align: right; word-break: break-all; }
+
+  .confirm-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .confirm-no {
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .confirm-no:hover { border-color: var(--error); color: var(--error); }
+
+  .confirm-yes {
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(59,130,246,0.3);
+  }
+  .confirm-yes:hover { transform: translateY(-1px); }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @media (max-width: 600px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .section { padding: 24px 20px; }
+    .container { padding: 32px 16px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="logo-badge">Sistema ATPV Online</div>
+    <h1>Solicitação de ATPV</h1>
+    <p>Preencha os dados abaixo com atenção. Sua solicitação será processada com segurança.</p>
+  </header>
+
+  <form id="mainForm" novalidate>
+
+    <!-- SEÇÃO 1: TIPO DE SOLICITANTE -->
+    <div class="section">
+      <div class="section-title"><span class="section-icon">👤</span> Tipo de Solicitante</div>
+
+      <div class="tipo-selector">
+        <button type="button" class="tipo-btn active" id="btn-lojista" onclick="setTipo('lojista')">
+          <span class="icon">🏪</span>
+          Lojista
+        </button>
+        <button type="button" class="tipo-btn" id="btn-particular" onclick="setTipo('particular')">
+          <span class="icon">🙋</span>
+          Particular
+        </button>
+      </div>
+
+      <div class="tipo-panel active" id="panel-lojista">
+        <div class="grid grid-2">
+          <div class="field">
+            <label>Nome da Loja <span class="req">*</span></label>
+            <input type="text" name="nome_loja" placeholder="Razão social ou nome fantasia" required>
+            <span class="error-msg">Campo obrigatório</span>
+          </div>
+          <div class="field">
+            <label>Nome do Solicitante <span class="req">*</span></label>
+            <input type="text" name="nome_solicitante_lojista" placeholder="Nome de quem está solicitando" required>
+            <span class="error-msg">Campo obrigatório</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tipo-panel" id="panel-particular">
+        <div class="grid grid-2">
+          <div class="field">
+            <label>Nome Completo <span class="req">*</span></label>
+            <input type="text" name="nome_particular" placeholder="Seu nome completo">
+            <span class="error-msg">Campo obrigatório</span>
+          </div>
+          <div class="field">
+            <label>WhatsApp <span class="req">*</span></label>
+            <input type="tel" name="whatsapp" placeholder="(00) 00000-0000" id="whatsapp">
+            <span class="error-msg">Campo obrigatório</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEÇÃO 2: DADOS DO VEÍCULO -->
+    <div class="section">
+      <div class="section-title"><span class="section-icon">🚗</span> Dados do Veículo</div>
+      <div class="grid grid-3">
+        <div class="field">
+          <label>Placa <span class="req">*</span></label>
+          <input type="text" name="placa" placeholder="ABC1D23" class="uppercase" maxlength="7" required>
+          <span class="error-msg">Campo obrigatório</span>
+        </div>
+        <div class="field">
+          <label>RENAVAM <span class="req">*</span></label>
+          <input type="text" name="renavam" placeholder="00000000000" maxlength="11" required>
+          <span class="error-msg">Campo obrigatório</span>
+        </div>
+        <div class="field">
+          <label>Modelo do Veículo <span class="req">*</span></label>
+          <input type="text" name="modelo" placeholder="Ex: Honda Civic EXL 2022" class="uppercase" required>
+          <span class="error-msg">Campo obrigatório</span>
+        </div>
+      </div>
+      <div class="grid" style="margin-top:20px; grid-template-columns: 1fr 1fr;">
+        <div class="field">
+          <label>Hodômetro (KM) Atual <span class="req">*</span></label>
+          <input type="number" name="hodometro" placeholder="Ex: 45000" min="0" required>
+          <span class="error-msg">Campo obrigatório</span>
+        </div>
+        <div class="field">
+          <label>Valor da Venda (R$) <span class="req">*</span></label>
+          <input type="text" name="valor_venda" placeholder="Ex: 35.000,00" id="valor_venda" required>
+          <span class="error-msg">Campo obrigatório</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEÇÃO 3: PROPRIETÁRIO / VENDEDOR -->
+    <div class="section">
+      <div class="section-title"><span class="section-icon">📋</span> Proprietário & Vendedor</div>
+      <div class="grid grid-2">
+        <div class="field">
+          <label>CPF / CNPJ do Proprietário <span class="req">*</span></label>
+          <input type="text" name="cpf_cnpj_proprietario" placeholder="000.000.000-00" id="doc_prop" required>
+          <span class="error-msg">Campo obrigatório</span>
+        </div>
+        <input type="hidden" name="email_vendedor" value="gomes.despachantesp@gmail.com">
+      </div>
+    </div>
+
+    <!-- SEÇÃO 4: COMPRADOR -->
+    <div class="section">
+      <div class="section-title"><span class="section-icon">🤝</span> Dados do Comprador</div>
+      <div class="grid grid-2">
+        <div class="field">
+          <label>CPF / CNPJ do Comprador <span class="req">*</span></label>
+          <input type="text" name="cpf_cnpj_comprador" placeholder="000.000.000-00" id="doc_comp" required>
+          <span class="error-msg">Campo obrigatório</span>
+        </div>
+        <div class="field">
+          <label>Nome Completo do Comprador <span class="req">*</span></label>
+          <input type="text" name="nome_comprador" placeholder="Nome como no documento" required>
+          <span class="error-msg">Campo obrigatório</span>
+        </div>
+        <input type="hidden" name="email_comprador" value="gomes.despachantesp@gmail.com">
+        <div class="field">
+          <label>CEP <span class="req">*</span></label>
+          <input type="text" name="cep" placeholder="00000-000" id="cep" maxlength="9" required>
+          <span class="error-msg">Campo obrigatório</span>
+        </div>
+      </div>
+      <div class="grid" style="margin-top:20px;">
+        <div class="field">
+          <label>Endereço Completo (com número, complemento e bairro) <span class="req">*</span></label>
+          <textarea name="endereco" placeholder="Ex: Rua das Flores, 123, Apto 4B, Bairro Centro" required></textarea>
+          <span class="error-msg">Campo obrigatório</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-area">
+      <button type="submit" class="submit-btn" id="submitBtn">
+        <span>🔒</span>
+        <span>Enviar Solicitação</span>
+      </button>
+      <div class="submit-note">
+        🔐 Seus dados são enviados com segurança e ficam em fila para processamento
+      </div>
+    </div>
+
+  </form>
+</div>
+
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">🔍</div>
+    <h2>Confirmar Solicitação</h2>
+    <p>Verifique os dados antes de enviar:</p>
+    <div class="confirm-dados" id="confirmDados"></div>
+    <div class="confirm-btns">
+      <button class="confirm-no" onclick="cancelarEnvio()">✕ Não, corrigir</button>
+      <button class="confirm-yes" onclick="confirmarEnvio()">✓ Sim, enviar</button>
+    </div>
+  </div>
+</div>
+
+<div class="success-overlay" id="successOverlay">
+  <div class="success-icon">✅</div>
+  <h2>Solicitação Enviada!</h2>
+  <p>Seus dados foram recebidos com sucesso e estão na fila de processamento. Em breve o ATPV será gerado.</p>
+  <button class="new-btn" onclick="resetForm()">Nova Solicitação</button>
+</div>
+
+<script>
+  let tipoAtual = 'lojista';
+
+  function setTipo(tipo) {
+    tipoAtual = tipo;
+    document.getElementById('btn-lojista').classList.toggle('active', tipo === 'lojista');
+    document.getElementById('btn-particular').classList.toggle('active', tipo === 'particular');
+    document.getElementById('panel-lojista').classList.toggle('active', tipo === 'lojista');
+    document.getElementById('panel-particular').classList.toggle('active', tipo === 'particular');
+  }
+
+  // Máscara CPF/CNPJ
+  function maskDoc(input) {
+    let v = input.value.replace(/\D/g, '');
+    if (v.length <= 11) {
+      v = v.replace(/(\d{3})(\d)/, '$1.$2')
+           .replace(/(\d{3})(\d)/, '$1.$2')
+           .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    } else {
+      v = v.replace(/^(\d{2})(\d)/, '$1.$2')
+           .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+           .replace(/\.(\d{3})(\d)/, '.$1/$2')
+           .replace(/(\d{4})(\d)/, '$1-$2');
+    }
+    input.value = v;
+  }
+
+  document.getElementById('doc_prop').addEventListener('input', function() { maskDoc(this); });
+  document.getElementById('doc_comp').addEventListener('input', function() { maskDoc(this); });
+
+  // Máscara CEP
+  document.getElementById('cep').addEventListener('input', function() {
+    let v = this.value.replace(/\D/g, '');
+    v = v.replace(/(\d{5})(\d)/, '$1-$2');
+    this.value = v;
+    if (v.replace('-','').length === 8) buscarCEP(v.replace('-',''));
+  });
+
+  // Auto-preenche endereço pelo CEP
+  async function buscarCEP(cep) {
+    try {
+      const r = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const d = await r.json();
+      if (!d.erro) {
+        const end = document.querySelector('[name="endereco"]');
+        end.value = `${d.logradouro}, [número], [complemento], ${d.bairro}`;
+        end.focus();
+      }
+    } catch(e) {}
+  }
+
+  // Máscara WhatsApp
+  document.getElementById('whatsapp').addEventListener('input', function() {
+    let v = this.value.replace(/\D/g, '');
+    v = v.replace(/(\d{2})(\d)/, '($1) $2')
+         .replace(/(\d{5})(\d{4})$/, '$1-$2');
+    this.value = v;
+  });
+
+  // Máscara valor
+  document.getElementById('valor_venda').addEventListener('input', function() {
+    let v = this.value.replace(/\D/g, '');
+    v = (parseInt(v) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    this.value = v === 'NaN' ? '' : v;
+  });
+
+  // Maiúsculas automáticas
+  document.querySelectorAll('.uppercase').forEach(el => {
+    el.addEventListener('input', function() { this.value = this.value.toUpperCase(); });
+  });
+
+  let dadosParaEnviar = null;
+
+  // ENVIO DO FORMULÁRIO
+  document.getElementById('mainForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    // Validação básica
+    let valid = true;
+    const requiredFields = this.querySelectorAll('[required]');
+    requiredFields.forEach(field => {
+      const panel = field.closest('.tipo-panel');
+      if (panel && !panel.classList.contains('active')) return;
+      if (!field.value.trim()) {
+        field.classList.add('invalid');
+        const msg = field.nextElementSibling;
+        if (msg && msg.classList.contains('error-msg')) msg.style.display = 'block';
+        valid = false;
+      } else {
+        field.classList.remove('invalid');
+        const msg = field.nextElementSibling;
+        if (msg && msg.classList.contains('error-msg')) msg.style.display = 'none';
+      }
+    });
+
+    if (!valid) {
+      document.querySelector('.invalid').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    // Coleta todos os dados
+    dadosParaEnviar = { tipo: tipoAtual };
+    new FormData(this).forEach((v, k) => { dadosParaEnviar[k] = v; });
+
+    // Monta o resumo de confirmação
+    const placa    = dadosParaEnviar.placa || '-';
+    const modelo   = dadosParaEnviar.modelo || '-';
+    const renavam  = dadosParaEnviar.renavam || '-';
+    const nomeComp = dadosParaEnviar.nome_comprador || '-';
+    const cpfComp  = dadosParaEnviar.cpf_cnpj_comprador || '-';
+    const cep      = dadosParaEnviar.cep || '-';
+    const endereco = dadosParaEnviar.endereco || '-';
+
+    document.getElementById('confirmDados').innerHTML = `
+      <div class="linha"><span class="rotulo">🚗 Placa</span><span class="valor">${placa.toUpperCase()}</span></div>
+      <div class="linha"><span class="rotulo">🏎️ Modelo</span><span class="valor">${modelo.toUpperCase()}</span></div>
+      <div class="linha"><span class="rotulo">🔢 RENAVAM</span><span class="valor">${renavam}</span></div>
+      <div class="linha"><span class="rotulo">👤 Comprador</span><span class="valor">${nomeComp}</span></div>
+      <div class="linha"><span class="rotulo">📄 CPF/CNPJ</span><span class="valor">${cpfComp}</span></div>
+      <div class="linha"><span class="rotulo">📮 CEP</span><span class="valor">${cep}</span></div>
+      <div class="linha"><span class="rotulo">📍 Endereço</span><span class="valor">${endereco}</span></div>
+    `;
+
+    document.getElementById('confirmOverlay').classList.add('show');
+  });
+
+  function cancelarEnvio() {
+    document.getElementById('confirmOverlay').classList.remove('show');
+    dadosParaEnviar = null;
+  }
+
+  async function confirmarEnvio() {
+    document.getElementById('confirmOverlay').classList.remove('show');
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳</span><span>Enviando...</span>';
+
+    try {
+      // URL do servidor — atualize aqui quando o ngrok mudar
+      const SERVER_URL = 'https://trapeze-cringing-recluse.ngrok-free.app/receber';
+      const resp = await fetch(SERVER_URL, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
+        body: JSON.stringify(dadosParaEnviar)
+      });
+
+      if (resp.ok) {
+        document.getElementById('successOverlay').classList.add('show');
+      } else {
+        throw new Error('Erro no servidor');
+      }
+    } catch(err) {
+      alert('❌ Não foi possível conectar ao servidor local.\n\nVerifique se o agente Python está rodando no computador.');
+      btn.disabled = false;
+      btn.innerHTML = '<span>🔒</span><span>Enviar Solicitação</span>';
+    }
+  }
+
+  function resetForm() {
+    window.location.reload();
+  }
+</script>
+</body>
+</html>
