@@ -602,7 +602,7 @@
         <div class="field">
           <label>CPF / CNPJ do Proprietário <span class="req">*</span></label>
           <input type="text" name="cpf_cnpj_proprietario" placeholder="000.000.000-00" id="doc_prop" required>
-          <span class="error-msg">Campo obrigatório</span>
+          <span class="error-msg" id="msg_prop">Campo obrigatório</span>
         </div>
         <input type="hidden" name="email_vendedor" value="gomes.despachantesp@gmail.com">
       </div>
@@ -615,7 +615,7 @@
         <div class="field">
           <label>CPF / CNPJ do Comprador <span class="req">*</span></label>
           <input type="text" name="cpf_cnpj_comprador" placeholder="000.000.000-00" id="doc_comp" required>
-          <span class="error-msg">Campo obrigatório</span>
+          <span class="error-msg" id="msg_comp">Campo obrigatório</span>
         </div>
         <div class="field">
           <label>Nome Completo do Comprador <span class="req">*</span></label>
@@ -715,13 +715,14 @@
   }
 
   function verificarCPFsDuplicados() {
-    const prop = document.querySelector('[name="cpf_cnpj_proprietario"]');
-    const comp = document.querySelector('[name="cpf_cnpj_comprador"]');
-    const msgProp = prop.nextElementSibling;
-    const msgComp = comp.nextElementSibling;
+    const prop = document.getElementById('doc_prop');
+    const comp = document.getElementById('doc_comp');
+    const msgProp = document.getElementById('msg_prop');
+    const msgComp = document.getElementById('msg_comp');
+    if (!prop || !comp || !msgProp || !msgComp) return;
     const cpfProp = prop.value.replace(/\D/g, '');
     const cpfComp = comp.value.replace(/\D/g, '');
-    if (cpfProp && cpfComp && cpfProp === cpfComp) {
+    if (cpfProp.length >= 11 && cpfComp.length >= 11 && cpfProp === cpfComp) {
       prop.classList.add('invalid');
       comp.classList.add('invalid');
       msgProp.textContent = '⚠️ CPF/CNPJ igual ao do Comprador!';
@@ -816,11 +817,11 @@
     new FormData(this).forEach((v, k) => { dadosParaEnviar[k] = v; });
 
     // Valida CPF/CNPJ — proprietário e comprador não podem ser iguais
-    const cpfProp = dadosParaEnviar.cpf_cnpj_proprietario.replace(/\D/g, '');
-    const cpfComp = dadosParaEnviar.cpf_cnpj_comprador.replace(/\D/g, '');
-    if (cpfProp && cpfComp && cpfProp === cpfComp) {
+    const cpfPropEnv = dadosParaEnviar.cpf_cnpj_proprietario.replace(/\D/g, '');
+    const cpfCompEnv = dadosParaEnviar.cpf_cnpj_comprador.replace(/\D/g, '');
+    if (cpfPropEnv && cpfCompEnv && cpfPropEnv === cpfCompEnv) {
       alert('⚠️ CPF/CNPJ do Proprietário e do Comprador não podem ser iguais!');
-      document.querySelector('[name="cpf_cnpj_comprador"]').focus();
+      document.getElementById('doc_comp').focus();
       return;
     }
 
