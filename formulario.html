@@ -628,10 +628,26 @@
           <span class="error-msg">Campo obrigatório</span>
         </div>
       </div>
-      <div class="grid" style="margin-top:20px;">
+      <div class="grid grid-2" style="margin-top:20px;">
         <div class="field">
-          <label>Endereço Completo (com número, complemento e bairro) <span class="req">*</span></label>
-          <textarea name="endereco" placeholder="Ex: Rua das Flores, 123, Apto 4B, Bairro Centro" required></textarea>
+          <label>Endereço <span class="req">*</span></label>
+          <input type="text" name="logradouro" placeholder="Rua, Av, etc." required>
+          <span class="error-msg">Campo obrigatório</span>
+        </div>
+        <div class="field">
+          <label>Número <span class="req">*</span></label>
+          <input type="text" name="numero" placeholder="Ex: 123" required>
+          <span class="error-msg">Campo obrigatório</span>
+        </div>
+      </div>
+      <div class="grid grid-2" style="margin-top:20px;">
+        <div class="field">
+          <label>Complemento</label>
+          <input type="text" name="complemento" placeholder="Apto, Sala, etc.">
+        </div>
+        <div class="field">
+          <label>Bairro <span class="req">*</span></label>
+          <input type="text" name="bairro" placeholder="Nome do bairro" required>
           <span class="error-msg">Campo obrigatório</span>
         </div>
       </div>
@@ -714,9 +730,9 @@
       const r = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const d = await r.json();
       if (!d.erro) {
-        const end = document.querySelector('[name="endereco"]');
-        end.value = `${d.logradouro}, [número], [complemento], ${d.bairro}`;
-        end.focus();
+        document.querySelector('[name="logradouro"]').value = d.logradouro || '';
+        document.querySelector('[name="bairro"]').value = d.bairro || '';
+        document.querySelector('[name="numero"]').focus();
       }
     } catch(e) {}
   }
@@ -790,7 +806,8 @@
       <div class="linha"><span class="rotulo">👤 Comprador</span><span class="valor">${nomeComp}</span></div>
       <div class="linha"><span class="rotulo">📄 CPF/CNPJ</span><span class="valor">${cpfComp}</span></div>
       <div class="linha"><span class="rotulo">📮 CEP</span><span class="valor">${cep}</span></div>
-      <div class="linha"><span class="rotulo">📍 Endereço</span><span class="valor">${endereco}</span></div>
+      <div class="linha"><span class="rotulo">📍 Endereço</span><span class="valor">${dadosParaEnviar.logradouro || '-'}, ${dadosParaEnviar.numero || '-'}</span></div>
+      <div class="linha"><span class="rotulo">🏘️ Bairro</span><span class="valor">${dadosParaEnviar.bairro || '-'}</span></div>
     `;
 
     document.getElementById('confirmOverlay').classList.add('show');
@@ -810,7 +827,7 @@
 
     try {
       // URL do servidor — atualize aqui quando o ngrok mudar
-      const SERVER_URL = 'http://185.250.36.188:5000/receber';
+      const SERVER_URL = 'https://atpv.tacvisao.com/receber';
       const resp = await fetch(SERVER_URL, {
         method: 'POST',
         headers: { 
