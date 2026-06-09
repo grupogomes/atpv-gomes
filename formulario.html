@@ -714,8 +714,32 @@
     input.value = v;
   }
 
-  document.getElementById('doc_prop').addEventListener('input', function() { maskDoc(this); });
-  document.getElementById('doc_comp').addEventListener('input', function() { maskDoc(this); });
+  function verificarCPFsDuplicados() {
+    const prop = document.querySelector('[name="cpf_cnpj_proprietario"]');
+    const comp = document.querySelector('[name="cpf_cnpj_comprador"]');
+    const msgProp = prop.nextElementSibling;
+    const msgComp = comp.nextElementSibling;
+    const cpfProp = prop.value.replace(/\D/g, '');
+    const cpfComp = comp.value.replace(/\D/g, '');
+    if (cpfProp && cpfComp && cpfProp === cpfComp) {
+      prop.classList.add('invalid');
+      comp.classList.add('invalid');
+      msgProp.textContent = '⚠️ CPF/CNPJ igual ao do Comprador!';
+      msgComp.textContent = '⚠️ CPF/CNPJ igual ao do Proprietário!';
+      msgProp.style.display = 'block';
+      msgComp.style.display = 'block';
+    } else {
+      prop.classList.remove('invalid');
+      comp.classList.remove('invalid');
+      msgProp.textContent = 'Campo obrigatório';
+      msgComp.textContent = 'Campo obrigatório';
+      if (prop.value) msgProp.style.display = 'none';
+      if (comp.value) msgComp.style.display = 'none';
+    }
+  }
+
+  document.getElementById('doc_prop').addEventListener('input', function() { maskDoc(this); verificarCPFsDuplicados(); });
+  document.getElementById('doc_comp').addEventListener('input', function() { maskDoc(this); verificarCPFsDuplicados(); });
 
   // Máscara CEP
   document.getElementById('cep').addEventListener('input', function() {
@@ -790,6 +814,15 @@
     // Coleta todos os dados
     dadosParaEnviar = { tipo: tipoAtual };
     new FormData(this).forEach((v, k) => { dadosParaEnviar[k] = v; });
+
+    // Valida CPF/CNPJ — proprietário e comprador não podem ser iguais
+    const cpfProp = dadosParaEnviar.cpf_cnpj_proprietario.replace(/\D/g, '');
+    const cpfComp = dadosParaEnviar.cpf_cnpj_comprador.replace(/\D/g, '');
+    if (cpfProp && cpfComp && cpfProp === cpfComp) {
+      alert('⚠️ CPF/CNPJ do Proprietário e do Comprador não podem ser iguais!');
+      document.querySelector('[name="cpf_cnpj_comprador"]').focus();
+      return;
+    }
 
     // Monta o resumo de confirmação
     const placa    = dadosParaEnviar.placa || '-';
