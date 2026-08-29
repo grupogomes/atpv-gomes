@@ -26,7 +26,7 @@ export function exigirPosto(req, res, proximo) {
       detalhe: `origem ${ip} fora das redes autorizadas`, ip
     });
     return res.status(403).json({
-      erro: 'Marcacao de ponto so e aceita nos terminais da empresa.',
+      erro: 'Marcação de ponto só é aceita nos terminais da empresa.',
       codigo: 'REDE_NAO_AUTORIZADA'
     });
   }
@@ -41,7 +41,7 @@ export function exigirPosto(req, res, proximo) {
       detalhe: `posto "${postoId || '(vazio)'}" nao autenticado`, ip
     });
     return res.status(403).json({
-      erro: 'Este equipamento nao esta autorizado a registrar ponto.',
+      erro: 'Este equipamento não está autorizado a registrar ponto.',
       codigo: 'POSTO_NAO_AUTORIZADO'
     });
   }
@@ -58,9 +58,9 @@ export function exigirUsuario(papeis = null) {
       || (req.get('authorization') || '').replace(/^Bearer\s+/i, '')
       || lerCookie(req, 'sessao');
     const usuario = sessaoValida(token);
-    if (!usuario) return res.status(401).json({ erro: 'Sessao expirada ou inexistente.' });
+    if (!usuario) return res.status(401).json({ erro: 'Sessão expirada ou inexistente.' });
     if (papeis && !papeis.includes(usuario.papel)) {
-      return res.status(403).json({ erro: 'Permissao insuficiente para esta operacao.' });
+      return res.status(403).json({ erro: 'Permissão insuficiente para esta operação.' });
     }
     req.usuario = usuario;
     req.ipOrigem = ipDaRequisicao(req);

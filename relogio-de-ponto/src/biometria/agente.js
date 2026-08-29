@@ -23,14 +23,14 @@ export function criarDriverAgente({ url = config.biometria.agenteUrl } = {}) {
       });
       if (!resposta.ok) {
         throw new ErroBiometria(
-          `Agente biometrico respondeu ${resposta.status}`, 'AGENTE_ERRO'
+          `Agente biométrico respondeu ${resposta.status}`, 'AGENTE_ERRO'
         );
       }
       return await resposta.json();
     } catch (erro) {
       if (erro instanceof ErroBiometria) throw erro;
       throw new ErroBiometria(
-        'Leitor biometrico indisponivel. Chame o suporte.', 'AGENTE_INDISPONIVEL'
+        'Leitor biométrico indisponível. Chame o suporte.', 'AGENTE_INDISPONIVEL'
       );
     } finally {
       clearTimeout(alarme);
@@ -49,14 +49,14 @@ export function criarDriverAgente({ url = config.biometria.agenteUrl } = {}) {
           detalhe: resposta.detalhe
         };
       } catch {
-        return { disponivel: false, detalhe: 'agente local nao responde' };
+        return { disponivel: false, detalhe: 'agente local não responde' };
       }
     },
 
     async capturar({ timeoutMs = 20000 } = {}) {
       const resposta = await chamar('/capturar', { timeoutMs }, timeoutMs + 2000);
       if (!resposta.template) {
-        throw new ErroBiometria('Nao foi possivel ler a digital. Tente novamente.', 'SEM_CAPTURA');
+        throw new ErroBiometria('Não foi possível ler a digital. Tente novamente.', 'SEM_CAPTURA');
       }
       return {
         template: Buffer.from(resposta.template, 'base64'),

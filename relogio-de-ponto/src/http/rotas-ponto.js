@@ -49,13 +49,13 @@ rotasPonto.post('/marcar-alternativo', limitar({ janelaMs: 60000, maximo: 10 }),
     const supervisor = sessaoValida(req.body?.sessaoSupervisor);
     if (!supervisor || !['admin', 'rh', 'supervisor'].includes(supervisor.papel)) {
       return res.status(403).json({
-        erro: 'Esta marcacao precisa ser autorizada por um supervisor.',
+        erro: 'Esta marcação precisa ser autorizada por um supervisor.',
         codigo: 'SUPERVISOR'
       });
     }
     const trabalhador = buscarPorCpf(req.body?.cpf);
     if (!trabalhador) {
-      return res.status(404).json({ erro: 'CPF nao encontrado no cadastro.' });
+      return res.status(404).json({ erro: 'CPF não encontrado no cadastro.' });
     }
 
     const marcacao = registrarMarcacao({
@@ -80,7 +80,7 @@ rotasPonto.post('/marcar-alternativo', limitar({ janelaMs: 60000, maximo: 10 }),
 rotasPonto.get('/comprovante/:nsr.pdf', async (req, res) => {
   const registro = lerRegistro(Number(req.params.nsr));
   if (!registro || registro.tipo !== '7') {
-    return res.status(404).json({ erro: 'Marcacao nao encontrada.' });
+    return res.status(404).json({ erro: 'Marcação não encontrada.' });
   }
   const trabalhador = buscarPorCpf(registro.conteudo.cpf);
   const pdf = await comprovantePdf({

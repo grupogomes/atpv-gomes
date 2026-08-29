@@ -27,7 +27,7 @@ async function buscar() {
     ]);
     $('identificacao').textContent = `${dados.trabalhador.nome} — CPF ${dados.trabalhador.cpf}`;
     $('tabela').innerHTML = `
-      <tr><th>Data</th><th>Hora</th><th>NSR</th><th>Identificacao</th><th>Terminal</th><th>Comprovante</th></tr>
+      <tr><th>Data</th><th>Hora</th><th>NSR</th><th>Identificação</th><th>Terminal</th><th>Comprovante</th></tr>
       ${dados.marcacoes.map((m) => `
         <tr>
           <td>${esc(m.dh.slice(8, 10))}/${esc(m.dh.slice(5, 7))}/${esc(m.dh.slice(0, 4))}</td>
@@ -44,8 +44,8 @@ async function buscar() {
         Extras ${hhmm(espelho.totais.extraMin)} ·
         Faltas ${hhmm(espelho.totais.faltaMin)} ·
         Saldo <strong>${hhmm(espelho.totais.saldoMin)}</strong>
-        <p class="legenda" style="margin-top:8px">Divergencia? Procure o RH. As marcacoes
-          originais nao podem ser apagadas: qualquer correcao entra como ajuste identificado,
+        <p class="legenda" style="margin-top:8px">Divergência? Procure o RH. As marcações
+          originais não podem ser apagadas: qualquer correção entra como ajuste identificado,
           ao lado do registro original.</p>
       </div>`;
   } catch (erro) {

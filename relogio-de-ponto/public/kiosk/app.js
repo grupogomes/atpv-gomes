@@ -37,9 +37,11 @@ async function sincronizarRelogio() {
 function pintarRelogio() {
   const agora = new Date(Date.now() + deslocamentoRelogio);
   $('relogio').textContent = agora.toLocaleTimeString('pt-BR');
-  $('data').textContent = agora.toLocaleDateString('pt-BR', {
+  const data = agora.toLocaleDateString('pt-BR', {
     weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
   });
+  // Maiuscula so na primeira letra: "Sabado, 29 de agosto de 2026".
+  $('data').textContent = data.charAt(0).toUpperCase() + data.slice(1);
 }
 
 /* --- telas -------------------------------------------------------------- */
@@ -66,8 +68,8 @@ function mostrarSucesso(dados, repetida) {
     <div class="nome">${escapar(dados.trabalhadorNome)}</div>
     <div class="horario">${escapar(dados.horaLegivel)}</div>
     <div class="detalhe">${escapar(dados.dataLegivel)} · NSR ${escapar(dados.nsr)} · ${escapar(dados.metodo)}</div>
-    ${repetida ? '<div class="detalhe">Marcacao ja registrada ha instantes — este e o mesmo comprovante.</div>' : ''}
-    <div class="detalhe" style="margin-top:12px">Codigo de autenticidade:</div>
+    ${repetida ? '<div class="detalhe">Marcação já registrada há instantes — este é o mesmo comprovante.</div>' : ''}
+    <div class="detalhe" style="margin-top:12px">Código de autenticidade:</div>
     <div class="hash">${escapar(dados.hash)}</div>
     <a class="detalhe" href="/api/ponto/comprovante/${encodeURIComponent(Number(dados.nsr))}.pdf" target="_blank" rel="noopener">Abrir comprovante em PDF</a>
   `;
@@ -109,12 +111,12 @@ async function marcar() {
         $('erro-config').textContent = dados.erro;
         return;
       }
-      mostrarFalha(dados.erro || 'Nao foi possivel registrar.');
+      mostrarFalha(dados.erro || 'Não foi possível registrar.');
       return;
     }
     mostrarSucesso(dados.marcacao, dados.repetida);
   } catch {
-    mostrarFalha('Sem comunicacao com o servidor de ponto. Avise o supervisor.');
+    mostrarFalha('Sem comunicação com o servidor de ponto. Avise o supervisor.');
   } finally {
     $('btn-marcar').disabled = false;
     $('btn-marcar').textContent = 'Registrar ponto';
@@ -134,7 +136,7 @@ async function verificarLeitor() {
     $('luz-leitor').className = `ponto ${leitor.disponivel ? 'on' : 'off'}`;
     $('txt-leitor').textContent = leitor.disponivel
       ? `leitor pronto${leitor.modelo ? ` · ${leitor.modelo}` : ''}`
-      : 'leitor indisponivel';
+      : 'leitor indisponível';
     $('btn-marcar').disabled = !leitor.disponivel;
   } catch {
     $('luz-leitor').className = 'ponto off';
@@ -174,7 +176,7 @@ async function meusRegistros() {
     sessionStorage.setItem('repp.trabalhador', dados.token);
     window.location.href = '/portal/';
   } catch {
-    mostrarFalha('Sem comunicacao com o servidor.');
+    mostrarFalha('Sem comunicação com o servidor.');
   } finally {
     $('btn-meus-registros').disabled = false;
     $('btn-meus-registros').textContent = 'Ver meus registros';

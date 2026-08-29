@@ -15,9 +15,9 @@ export class ErroValidacao extends Error {
  */
 export function salvarTrabalhador(dados, ator = 'sistema', ip = '') {
   const cpf = normalizarCpf(dados.cpf);
-  if (!cpfValido(cpf)) throw new ErroValidacao('CPF invalido.');
+  if (!cpfValido(cpf)) throw new ErroValidacao('CPF inválido.');
   const nome = String(dados.nome || '').trim();
-  if (nome.length < 3) throw new ErroValidacao('Nome do trabalhador e obrigatorio.');
+  if (nome.length < 3) throw new ErroValidacao('Nome do trabalhador é obrigatório.');
 
   const agora = paraDH(new Date());
   const existente = db().prepare('SELECT * FROM trabalhador WHERE cpf = ?').get(cpf);

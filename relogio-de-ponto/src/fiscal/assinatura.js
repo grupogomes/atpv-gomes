@@ -34,14 +34,14 @@ export function situacaoAssinatura() {
   if (!assinaturaConfigurada()) {
     return {
       ativa: false,
-      alerta: 'Assinatura digital ICP-Brasil nao configurada. Os arquivos AFD/AEJ e ' +
-              'os comprovantes saem sem assinatura e NAO atendem plenamente a ' +
-              'Portaria MTP 671/2021. Configure ASSINATURA_COMANDO e ASSINATURA_CERTIFICADO.'
+      alerta: 'Assinatura digital ICP-Brasil não configurada. Os arquivos AFD/AEJ e ' +
+              'os comprovantes saem sem assinatura e NÃO atendem plenamente à ' +
+              'Portaria MTP nº 671/2021. Configure ASSINATURA_COMANDO e ASSINATURA_CERTIFICADO.'
     };
   }
   const certificado = process.env.ASSINATURA_CERTIFICADO;
   if (!fs.existsSync(certificado)) {
-    return { ativa: false, alerta: `Certificado nao encontrado em ${certificado}.` };
+    return { ativa: false, alerta: `Certificado não encontrado em ${certificado}.` };
   }
   return { ativa: true, certificado };
 }
@@ -52,7 +52,7 @@ export function situacaoAssinatura() {
  */
 export function assinar(conteudo, { tipo = 'cades' } = {}) {
   if (!assinaturaConfigurada()) {
-    throw new Error('Assinatura digital nao configurada.');
+    throw new Error('Assinatura digital não configurada.');
   }
   const base = `/tmp/repp-${crypto.randomUUID()}`;
   const entrada = `${base}.in`;

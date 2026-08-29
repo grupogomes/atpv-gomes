@@ -106,7 +106,7 @@ function montarLinhaAej(tipo, valores) {
  */
 export function gerarAej({ de, ate, trabalhadores = null }) {
   const empregador = empregadorAtual();
-  if (!empregador) throw new Error('Empregador nao cadastrado.');
+  if (!empregador) throw new Error('Empregador não cadastrado.');
 
   const lista = (trabalhadores || listarTrabalhadores({ incluirInativos: true }))
     .filter((t) => !t.isento_jornada);

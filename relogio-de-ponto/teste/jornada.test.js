@@ -95,7 +95,7 @@ test('numero impar de marcacoes aparece como jornada em aberto', () => {
   marcar('2026-08-10T13:00:00-03:00');
 
   const dia = apurarDia(ana.id, '2026-08-10');
-  assert.ok(dia.ocorrencias.some((o) => /impar/.test(o)));
+  assert.ok(dia.ocorrencias.some((o) => /ímpar/.test(o)));
 });
 
 test('hora noturna e convertida pelo fator de 52min30s (CLT art. 73)', () => {

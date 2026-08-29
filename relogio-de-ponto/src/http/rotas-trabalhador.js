@@ -32,7 +32,7 @@ rotasTrabalhador.post('/abrir-sessao', exigirPosto, async (req, res) => {
     const captura = await driver().capturar({ timeoutMs: 20000 });
     const resultado = await driver().identificar(captura.template, candidatosAtivos());
     if (!resultado.encontrado || (resultado.score ?? 0) < config.biometria.scoreMinimo) {
-      return res.status(401).json({ erro: 'Digital nao reconhecida.' });
+      return res.status(401).json({ erro: 'Digital não reconhecida.' });
     }
     const token = novoToken(24);
     const agora = new Date();
@@ -55,7 +55,7 @@ function exigirTrabalhador(req, res, proximo) {
   const token = req.get('x-sessao-trabalhador') || req.query.t;
   const linha = token && db().prepare('SELECT * FROM sessao_trabalhador WHERE token = ?').get(token);
   if (!linha || deDH(linha.expira_em) < new Date()) {
-    return res.status(401).json({ erro: 'Sessao expirada. Encoste o dedo no leitor novamente.' });
+    return res.status(401).json({ erro: 'Sessão expirada. Encoste o dedo no leitor novamente.' });
   }
   req.trabalhador = buscarPorId(linha.trabalhador_id);
   return proximo();
@@ -89,7 +89,7 @@ rotasTrabalhador.get('/espelho', exigirTrabalhador, (req, res) => {
 rotasTrabalhador.get('/comprovante/:nsr.pdf', exigirTrabalhador, async (req, res) => {
   const registro = lerRegistro(Number(req.params.nsr));
   if (!registro || registro.tipo !== '7' || registro.conteudo.cpf !== req.trabalhador.cpf) {
-    return res.status(404).json({ erro: 'Comprovante nao encontrado.' });
+    return res.status(404).json({ erro: 'Comprovante não encontrado.' });
   }
   const pdf = await comprovantePdf({
     nsr: registro.nsr, dh: registro.dh, hash: registro.hash,
@@ -113,7 +113,7 @@ rotasTrabalhador.post('/verificar', express.json(), (req, res) => {
   const hash = String(req.body?.hash || '').trim().toLowerCase();
   const registro = lerRegistro(nsr);
   if (!registro || registro.tipo !== '7' || registro.hash !== hash) {
-    return res.json({ autentico: false, mensagem: 'Comprovante nao confere com os registros do sistema.' });
+    return res.json({ autentico: false, mensagem: 'Comprovante não confere com os registros do sistema.' });
   }
   const trabalhador = buscarPorCpf(registro.conteudo.cpf);
   res.json({
@@ -123,6 +123,6 @@ rotasTrabalhador.post('/verificar', express.json(), (req, res) => {
     // Devolvemos apenas o que ja consta do papel que a pessoa tem em maos.
     cpf: formatarCpf(registro.conteudo.cpf),
     nome: trabalhador?.nome || '',
-    mensagem: 'Comprovante autentico e integro.'
+    mensagem: 'Comprovante autêntico e íntegro.'
   });
 });

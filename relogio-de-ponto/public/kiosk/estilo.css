@@ -35,7 +35,7 @@ main { width: min(720px, 100%); text-align: center; }
   line-height: 1;
 }
 
-.data { color: var(--suave); font-size: 20px; margin-top: 8px; text-transform: capitalize; }
+.data { color: var(--suave); font-size: 20px; margin-top: 8px; }
 
 .cartao {
   background: var(--painel);

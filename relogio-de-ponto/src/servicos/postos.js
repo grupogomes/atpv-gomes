@@ -14,7 +14,7 @@ import { registrarAuditoria } from './auditoria.js';
 export function provisionarPosto({ id, nome, local = '', ator = 'sistema', ip = '' }) {
   const identificador = String(id || '').trim().toUpperCase();
   if (!/^[A-Z0-9][A-Z0-9._-]{2,31}$/.test(identificador)) {
-    throw new Error('Identificador de posto invalido (use 3 a 32 caracteres: A-Z, 0-9, . _ -).');
+    throw new Error('Identificador de posto inválido (use 3 a 32 caracteres: A-Z, 0-9, . _ -).');
   }
   const token = novoToken(32);
   const { hash, salt } = hashSenha(token);

@@ -6,7 +6,7 @@ import { registrarAuditoria } from './auditoria.js';
 const DURACAO_SESSAO_MS = 8 * 60 * 60 * 1000; // 8h
 
 export function criarUsuario({ login, nome, senha, papel }, ator = 'sistema', ip = '') {
-  if (!['admin', 'rh', 'supervisor'].includes(papel)) throw new Error('Papel invalido.');
+  if (!['admin', 'rh', 'supervisor'].includes(papel)) throw new Error('Papel inválido.');
   if (!senha || senha.length < 10) {
     throw new Error('A senha administrativa deve ter ao menos 10 caracteres.');
   }

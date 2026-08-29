@@ -44,6 +44,10 @@ button.perigo { border-color: var(--erro); color: var(--erro); }
 .alerta.erro { border-left-color: var(--erro); }
 .alerta.ok { border-left-color: var(--ok); }
 .mono { font-family: ui-monospace, Menlo, monospace; font-size: 12px; word-break: break-all; }
+.nao-quebra { white-space: nowrap; }
+/* Cada horario do espelho e uma unidade: nunca parte "18:00" em duas linhas. */
+.marca { font-family: ui-monospace, Menlo, monospace; font-size: 12px;
+         white-space: nowrap; display: inline-block; margin-right: 8px; }
 .login { max-width: 340px; margin: 12vh auto; }
 .login input { width: 100%; margin-bottom: 12px; }
 .login button { width: 100%; }

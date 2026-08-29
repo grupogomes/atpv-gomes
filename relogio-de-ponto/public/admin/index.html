@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Administracao do Ponto</title>
+<title>Administração do Ponto</title>
 <link rel="stylesheet" href="estilo.css">
 </head>
 <body>
 
 <div class="login cartao" id="tela-login">
-  <h2>Administracao do ponto</h2>
+  <h2>Administração do ponto</h2>
   <p class="legenda">Acesso restrito ao RH e aos gestores.</p>
   <input id="login" placeholder="Login" autocomplete="username">
   <input id="senha" type="password" placeholder="Senha" autocomplete="current-password">
@@ -19,9 +19,9 @@
 
 <div id="app" hidden>
   <header>
-    <h1>Registro Eletronico de Ponto</h1>
+    <h1>Registro Eletrônico de Ponto</h1>
     <nav>
-      <button data-aba="saude" class="ativo">Saude</button>
+      <button data-aba="saude" class="ativo">Saúde</button>
       <button data-aba="pessoas">Pessoas</button>
       <button data-aba="espelho">Espelho</button>
       <button data-aba="postos">Postos</button>
@@ -33,8 +33,8 @@
 
   <main>
     <section id="aba-saude">
-      <h2>Saude do sistema</h2>
-      <p class="legenda">Confira antes de qualquer entrega a fiscalizacao.</p>
+      <h2>Saúde do sistema</h2>
+      <p class="legenda">Confira antes de qualquer entrega à fiscalização.</p>
       <div id="alertas"></div>
       <div class="cartao" id="resumo-saude"></div>
     </section>
@@ -46,9 +46,9 @@
         <div class="linha">
           <div><label>CPF</label><input id="p-cpf" placeholder="000.000.000-00"></div>
           <div><label>Nome</label><input id="p-nome" size="28"></div>
-          <div><label>Matricula</label><input id="p-matricula" size="10"></div>
+          <div><label>Matrícula</label><input id="p-matricula" size="10"></div>
           <div><label>Cargo</label><input id="p-cargo" size="16"></div>
-          <div><label>Admissao</label><input id="p-admissao" type="date"></div>
+          <div><label>Admissão</label><input id="p-admissao" type="date"></div>
           <button class="acao" id="btn-salvar-pessoa">Salvar</button>
         </div>
         <p class="alerta erro" id="erro-pessoa" hidden></p>
@@ -58,12 +58,12 @@
 
     <section id="aba-espelho" hidden>
       <h2>Espelho de ponto</h2>
-      <p class="legenda">Apuracao a partir do livro-razao. Nenhuma marcacao e alterada aqui.</p>
+      <p class="legenda">Apuração a partir do livro-razão. Nenhuma marcação é alterada aqui.</p>
       <div class="cartao">
         <div class="linha">
           <div><label>Trabalhador</label><select id="e-trabalhador"></select></div>
           <div><label>De</label><input id="e-de" type="date"></div>
-          <div><label>Ate</label><input id="e-ate" type="date"></div>
+          <div><label>Até</label><input id="e-ate" type="date"></div>
           <button class="acao" id="btn-espelho">Gerar</button>
         </div>
       </div>
@@ -91,17 +91,17 @@
       <div class="cartao">
         <div class="linha">
           <div><label>De</label><input id="f-de" type="date"></div>
-          <div><label>Ate</label><input id="f-ate" type="date"></div>
+          <div><label>Até</label><input id="f-ate" type="date"></div>
           <button class="acao" id="btn-afd">Baixar AFD</button>
           <button class="acao" id="btn-aej">Baixar AEJ</button>
         </div>
       </div>
-      <div class="cartao rolagem"><h2 style="font-size:15px;margin-bottom:8px">Exportacoes anteriores</h2><table id="tabela-exportacoes"></table></div>
+      <div class="cartao rolagem"><h2 style="font-size:15px;margin-bottom:8px">Exportações anteriores</h2><table id="tabela-exportacoes"></table></div>
     </section>
 
     <section id="aba-auditoria" hidden>
       <h2>Auditoria</h2>
-      <p class="legenda">Tudo que nao e marcacao: acessos, cadastros, exportacoes, excecoes.</p>
+      <p class="legenda">Tudo que não é marcação: acessos, cadastros, exportações, exceções.</p>
       <div class="cartao rolagem"><table id="tabela-auditoria"></table></div>
     </section>
   </main>

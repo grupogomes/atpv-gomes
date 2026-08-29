@@ -27,7 +27,7 @@ export function dadosComprovante(marcacao) {
     empregadorTipoDocumento: empregador?.tipo_identificador === 2 ? 'CPF' : 'CNPJ',
     empregadorEndereco: empregador?.endereco || '',
     repIdentificacao: config.rep.identificacao,
-    repTipo: 'REP-P (art. 78 da Portaria MTP 671/2021)',
+    repTipo: 'REP-P (Portaria MTP nº 671/2021)',
     trabalhadorNome: marcacao.nome,
     trabalhadorCpf: formatarCpf(marcacao.cpf),
     nsr: String(marcacao.nsr).padStart(9, '0'),
@@ -40,9 +40,15 @@ export function dadosComprovante(marcacao) {
   };
 }
 
-/** Versao texto — para impressora termica de bobina (40 colunas). */
+/**
+ * Versao texto — para impressora termica de bobina (40 colunas).
+ *
+ * Sai deliberadamente SEM acentuacao: boa parte das impressoras termicas de
+ * bobina imprime lixo no lugar de caractere acentuado. A versao em PDF e a
+ * tela do quiosque mostram o texto acentuado normalmente.
+ */
 export function comprovanteTexto(marcacao) {
-  const d = dadosComprovante(marcacao);
+  const d = semAcento(dadosComprovante(marcacao));
   const linha = '-'.repeat(40);
   return [
     linha,
@@ -70,6 +76,17 @@ export function comprovanteTexto(marcacao) {
     linha,
     ''
   ].join('\n');
+}
+
+/** Remove acentuacao de todos os campos de texto do comprovante. */
+function semAcento(dados) {
+  const limpo = {};
+  for (const [chave, valor] of Object.entries(dados)) {
+    limpo[chave] = typeof valor === 'string'
+      ? valor.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      : valor;
+  }
+  return limpo;
 }
 
 function quebrar(texto, largura) {
@@ -120,7 +137,7 @@ export async function comprovantePdf(marcacao) {
   ]);
   secao([
     ['Registrador', d.repTipo],
-    ['Identificacao do REP', d.repIdentificacao]
+    ['Identificação do REP', d.repIdentificacao]
   ]);
   secao([
     ['Trabalhador', d.trabalhadorNome],
@@ -131,15 +148,15 @@ export async function comprovantePdf(marcacao) {
     ['Data', d.dataLegivel],
     ['Hora', d.horaLegivel],
     ['Posto', d.posto],
-    ['Identificacao', d.metodo]
+    ['Identificação', d.metodo]
   ]);
 
-  doc.font('Helvetica-Bold').fontSize(6).text('Codigo de autenticidade (SHA-256)');
+  doc.font('Helvetica-Bold').fontSize(6).text('Código de autenticidade (SHA-256)');
   doc.font('Courier').fontSize(6).text(d.hash, { width: 194 });
   doc.moveDown(0.5);
   doc.font('Helvetica').fontSize(5.5).text(
     'Documento emitido nos termos da Portaria MTP nº 671/2021. O registro que ' +
-    'lhe deu origem e imutavel e esta encadeado por hash no arquivo-fonte de ' +
+    'lhe deu origem é imutável e está encadeado por hash no arquivo-fonte de ' +
     'dados (AFD) do empregador.',
     { align: 'justify' }
   );

@@ -40,7 +40,7 @@ export function montarLinha(tipo, valores) {
 export function gerarAfd({ inicio, fim }) {
   const empregador = empregadorAtual();
   if (!empregador) {
-    throw new Error('Empregador nao cadastrado: configure o .env e rode `npm run migrar`.');
+    throw new Error('Empregador não cadastrado: configure o .env e rode `npm run migrar`.');
   }
 
   const dhInicial = paraDH(inicio);

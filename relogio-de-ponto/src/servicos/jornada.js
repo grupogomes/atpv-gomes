@@ -144,20 +144,20 @@ export function apurarDia(trabalhadorId, data, parametros = PARAMETROS_CLT) {
   const previstoMin = calcularPrevisto(escala);
 
   const ocorrencias = [];
-  if (marcacaoImpar) ocorrencias.push('Numero impar de marcacoes: jornada em aberto.');
+  if (marcacaoImpar) ocorrencias.push('Número ímpar de marcações: jornada em aberto.');
 
   // Art. 71: intervalo intrajornada.
   if (trabalhadoMin > 360 && intervaloMin < parametros.intervaloMinimoAcima6hMin) {
     ocorrencias.push(
       `Intervalo intrajornada de ${minutosParaHHMM(intervaloMin)} para jornada acima de 6h ` +
-      `(CLT art. 71: minimo ${minutosParaHHMM(parametros.intervaloMinimoAcima6hMin)}). ` +
-      'Periodo suprimido e devido com acrescimo de 50% (art. 71, §4º).'
+      `(CLT art. 71: mínimo ${minutosParaHHMM(parametros.intervaloMinimoAcima6hMin)}). ` +
+      'Período suprimido é devido com acréscimo de 50% (art. 71, §4º).'
     );
   } else if (trabalhadoMin > 240 && trabalhadoMin <= 360
              && intervaloMin < parametros.intervaloMinimoEntre4e6hMin) {
     ocorrencias.push(
       `Intervalo de ${minutosParaHHMM(intervaloMin)} para jornada entre 4h e 6h ` +
-      `(CLT art. 71, §1º: minimo 15 min).`
+      `(CLT art. 71, §1º: mínimo 15 min).`
     );
   }
 
@@ -233,7 +233,7 @@ export function espelhoDePonto(trabalhadorId, { de, ate }, parametros = PARAMETR
       const descanso = minutosEntre(deDH(ultimaSaida.dh), deDH(primeiraEntrada.dh));
       if (descanso > 0 && descanso < parametros.interjornadaMinimaMin) {
         atual.ocorrencias.push(
-          `Interjornada de ${minutosParaHHMM(descanso)} (CLT art. 66: minimo 11h).`
+          `Interjornada de ${minutosParaHHMM(descanso)} (CLT art. 66: mínimo 11h).`
         );
       }
     }
@@ -256,12 +256,12 @@ export function espelhoDePonto(trabalhadorId, { de, ate }, parametros = PARAMETR
 /** Lanca um tratamento de jornada, preservando a marcacao original. */
 export function lancarTratamento({ trabalhadorId, data, tipo, nsrOrigem = null, dhConsiderada = null, motivo, autorizadoPor }) {
   if (!['inclusao', 'desconsideracao', 'justificativa'].includes(tipo)) {
-    throw new Error('Tipo de tratamento invalido.');
+    throw new Error('Tipo de tratamento inválido.');
   }
   if (!motivo || String(motivo).trim().length < 5) {
     throw new Error('Todo tratamento de jornada exige motivo registrado.');
   }
-  if (!autorizadoPor) throw new Error('Todo tratamento exige responsavel identificado.');
+  if (!autorizadoPor) throw new Error('Todo tratamento exige responsável identificado.');
 
   db().prepare(`
     INSERT INTO tratamento (trabalhador_id, data, nsr_origem, tipo, dh_considerada, motivo, autorizado_por, criado_em)

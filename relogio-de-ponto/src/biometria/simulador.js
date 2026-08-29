@@ -13,7 +13,7 @@ export function criarSimulador({ sementeAtual = null } = {}) {
     nome: 'simulador',
 
     async status() {
-      return { disponivel: true, modelo: 'Simulador', detalhe: 'driver de homologacao' };
+      return { disponivel: true, modelo: 'Simulador', detalhe: 'driver de homologação' };
     },
 
     /** Em producao a captura vem do leitor; aqui vem da semente injetada. */

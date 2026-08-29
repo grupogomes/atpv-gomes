@@ -46,22 +46,22 @@ export const METODOS = ['biometria', 'alternativo'];
  */
 export function registrarMarcacao(entrada) {
   const trabalhador = buscarPorId(entrada.trabalhadorId);
-  if (!trabalhador) throw new ErroMarcacao('Trabalhador nao encontrado.', 'DESCONHECIDO');
+  if (!trabalhador) throw new ErroMarcacao('Trabalhador não encontrado.', 'DESCONHECIDO');
   if (!trabalhador.ativo) {
     throw new ErroMarcacao('Cadastro inativo. Procure o RH.', 'INATIVO');
   }
   if (!METODOS.includes(entrada.metodo)) {
-    throw new ErroMarcacao('Metodo de identificacao invalido.', 'METODO_INVALIDO');
+    throw new ErroMarcacao('Método de identificação inválido.', 'METODO_INVALIDO');
   }
   if (entrada.metodo === 'alternativo') {
     if (!entrada.justificativa || String(entrada.justificativa).trim().length < 5) {
       throw new ErroMarcacao(
-        'Marcacao por credencial alternativa exige justificativa.', 'JUSTIFICATIVA'
+        'Marcação por credencial alternativa exige justificativa.', 'JUSTIFICATIVA'
       );
     }
     if (!entrada.autorizadoPor) {
       throw new ErroMarcacao(
-        'Marcacao por credencial alternativa exige autorizacao de supervisor.', 'AUTORIZACAO'
+        'Marcação por credencial alternativa exige autorização de supervisor.', 'AUTORIZACAO'
       );
     }
   }
@@ -164,7 +164,7 @@ export async function baterPontoPorBiometria({ postoId }) {
   const resultado = await leitor.identificar(captura.template, candidatos);
   if (!resultado.encontrado || (resultado.score ?? 0) < config.biometria.scoreMinimo) {
     throw new ErroBiometria(
-      'Digital nao reconhecida. Tente outro dedo ou procure o supervisor.',
+      'Digital não reconhecida. Tente outro dedo ou procure o supervisor.',
       'NAO_RECONHECIDO'
     );
   }

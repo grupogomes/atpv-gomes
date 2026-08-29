@@ -28,7 +28,7 @@ export const rotasAdmin = express.Router();
 // --------------------------------------------------------------------------
 rotasAdmin.post('/login', limitar({ janelaMs: 300000, maximo: 10 }), (req, res) => {
   const sessao = autenticar(req.body?.login, req.body?.senha, req.ip);
-  if (!sessao) return res.status(401).json({ erro: 'Login ou senha invalidos.' });
+  if (!sessao) return res.status(401).json({ erro: 'Login ou senha inválidos.' });
   res.json(sessao);
 });
 
@@ -103,7 +103,7 @@ rotasAdmin.get('/termo-biometria', exigirUsuario(), (req, res) => {
 
 rotasAdmin.post('/trabalhadores/:id/consentimento', exigirUsuario(['admin', 'rh']), (req, res) => {
   const trabalhador = buscarPorId(Number(req.params.id));
-  if (!trabalhador) return res.status(404).json({ erro: 'Trabalhador nao encontrado.' });
+  if (!trabalhador) return res.status(404).json({ erro: 'Trabalhador não encontrado.' });
   registrarConsentimento({
     trabalhadorId: trabalhador.id,
     versaoTermo: TERMO_BIOMETRIA.versao,
@@ -128,7 +128,7 @@ rotasAdmin.delete('/trabalhadores/:id/consentimento', exigirUsuario(['admin', 'r
 rotasAdmin.post('/trabalhadores/:id/biometria', exigirUsuario(['admin', 'rh']), async (req, res) => {
   try {
     const trabalhador = buscarPorId(Number(req.params.id));
-    if (!trabalhador) return res.status(404).json({ erro: 'Trabalhador nao encontrado.' });
+    if (!trabalhador) return res.status(404).json({ erro: 'Trabalhador não encontrado.' });
     if (!consentimentoVigente(trabalhador.id)) {
       return res.status(412).json({
         erro: 'Registre primeiro o consentimento informado do trabalhador (LGPD art. 11).',
@@ -136,7 +136,7 @@ rotasAdmin.post('/trabalhadores/:id/biometria', exigirUsuario(['admin', 'rh']), 
       });
     }
     const dedo = String(req.body?.dedo || '').trim();
-    if (!dedo) return res.status(400).json({ erro: 'Informe qual dedo esta sendo cadastrado.' });
+    if (!dedo) return res.status(400).json({ erro: 'Informe qual dedo está sendo cadastrado.' });
 
     const captura = await driver().capturar({ timeoutMs: 25000 });
     if (captura.qualidade < 50) {
@@ -176,7 +176,7 @@ rotasAdmin.post('/postos', exigirUsuario(['admin']), (req, res) => {
     });
     res.json({
       ...resultado,
-      aviso: 'Guarde o token agora: ele nao pode ser consultado depois, apenas reemitido.'
+      aviso: 'Guarde o token agora: ele não pode ser consultado depois, apenas reemitido.'
     });
   } catch (erro) {
     res.status(400).json({ erro: erro.message });
@@ -193,7 +193,7 @@ rotasAdmin.delete('/postos/:id', exigirUsuario(['admin']), (req, res) => {
 // --------------------------------------------------------------------------
 rotasAdmin.get('/espelho/:id', exigirUsuario(), (req, res) => {
   const { de, ate } = req.query;
-  if (!de || !ate) return res.status(400).json({ erro: 'Informe de e ate (AAAA-MM-DD).' });
+  if (!de || !ate) return res.status(400).json({ erro: 'Informe de e até (AAAA-MM-DD).' });
   res.json(espelhoDePonto(Number(req.params.id), { de, ate }));
 });
 
@@ -280,12 +280,12 @@ rotasAdmin.get('/saude', exigirUsuario(), async (req, res) => {
   `).all();
 
   const alertas = [];
-  if (!integridade.integro) alertas.push('Cadeia de registros com inconsistencias — investigue imediatamente.');
-  if (!leitor.disponivel) alertas.push('Leitor biometrico indisponivel.');
+  if (!integridade.integro) alertas.push('Cadeia de registros com inconsistências — investigue imediatamente.');
+  if (!leitor.disponivel) alertas.push('Leitor biométrico indisponível.');
   if (!assinatura.ativa) alertas.push(assinatura.alerta);
   if (semBiometria.length) alertas.push(`${semBiometria.length} trabalhador(es) ativo(s) sem biometria cadastrada.`);
   if (config.biometria.driver === 'simulador') {
-    alertas.push('Driver biometrico em modo SIMULADOR: nao usar em producao.');
+    alertas.push('Driver biométrico em modo SIMULADOR: não usar em produção.');
   }
 
   res.json({ integridade, leitor, assinatura, semBiometria, alertas, rep: config.rep });

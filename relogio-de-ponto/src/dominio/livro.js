@@ -104,11 +104,11 @@ export function verificarIntegridade() {
 
   for (const linha of linhas) {
     if (linha.nsr !== esperadoNsr) {
-      problemas.push({ nsr: linha.nsr, erro: `NSR fora de sequencia (esperado ${esperadoNsr})` });
+      problemas.push({ nsr: linha.nsr, erro: `NSR fora de sequência (esperado ${esperadoNsr})` });
       esperadoNsr = linha.nsr;
     }
     if (linha.hash_anterior !== esperadoAnterior) {
-      problemas.push({ nsr: linha.nsr, erro: 'encadeamento rompido: hash anterior nao confere' });
+      problemas.push({ nsr: linha.nsr, erro: 'encadeamento rompido: hash anterior não confere' });
     }
     const recalculado = calcularHash({
       nsr: linha.nsr,
@@ -119,7 +119,7 @@ export function verificarIntegridade() {
       hashAnterior: linha.hash_anterior
     });
     if (recalculado !== linha.hash) {
-      problemas.push({ nsr: linha.nsr, erro: 'conteudo adulterado: hash nao confere' });
+      problemas.push({ nsr: linha.nsr, erro: 'conteúdo adulterado: hash não confere' });
     }
     esperadoAnterior = linha.hash;
     esperadoNsr = linha.nsr + 1;
