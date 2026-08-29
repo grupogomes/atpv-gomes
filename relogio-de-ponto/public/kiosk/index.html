@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Registro de Ponto</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<main>
+  <div class="relogio" id="relogio">--:--:--</div>
+  <div class="data" id="data">&nbsp;</div>
+
+  <!-- Provisionamento: aparece uma unica vez, na instalacao do terminal -->
+  <section class="cartao config" id="tela-config" hidden>
+    <p class="instrucao">Terminal nao autorizado</p>
+    <p class="detalhe">Informe as credenciais fornecidas pelo administrador. Elas ficam
+      guardadas apenas neste computador.</p>
+    <label for="posto-id">Identificador do posto</label>
+    <input id="posto-id" autocomplete="off" spellcheck="false" placeholder="RECEPCAO-01">
+    <label for="posto-token">Token do posto</label>
+    <input id="posto-token" type="password" autocomplete="off" spellcheck="false">
+    <button id="btn-salvar-posto">Autorizar este terminal</button>
+    <p class="mensagem-erro" id="erro-config"></p>
+  </section>
+
+  <!-- Tela normal de marcacao -->
+  <section class="cartao" id="tela-marcar" hidden>
+    <p class="instrucao">Encoste o dedo no leitor para registrar seu ponto</p>
+    <button id="btn-marcar">Registrar ponto</button>
+    <button class="secundario" id="btn-meus-registros">Ver meus registros</button>
+    <p class="aviso-legal">
+      A marcacao e registrada exatamente no instante em que voce a faz. O sistema
+      nao bloqueia nem ajusta horarios (Portaria MTP nº 671/2021). Voce recebe um
+      comprovante a cada registro.
+    </p>
+  </section>
+
+  <!-- Resultado -->
+  <section class="cartao resultado" id="tela-resultado">
+    <div class="selo" id="selo"></div>
+    <div id="corpo-resultado"></div>
+    <button class="secundario" id="btn-voltar">Concluir</button>
+  </section>
+
+  <div class="rodape">
+    <span class="pastilha"><span class="ponto" id="luz-leitor"></span><span id="txt-leitor">verificando leitor…</span></span>
+    <span id="txt-posto"></span>
+  </div>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

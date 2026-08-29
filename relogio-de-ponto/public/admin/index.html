@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administracao do Ponto</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<div class="login cartao" id="tela-login">
+  <h2>Administracao do ponto</h2>
+  <p class="legenda">Acesso restrito ao RH e aos gestores.</p>
+  <input id="login" placeholder="Login" autocomplete="username">
+  <input id="senha" type="password" placeholder="Senha" autocomplete="current-password">
+  <button class="acao" id="btn-entrar">Entrar</button>
+  <p class="alerta erro" id="erro-login" hidden></p>
+</div>
+
+<div id="app" hidden>
+  <header>
+    <h1>Registro Eletronico de Ponto</h1>
+    <nav>
+      <button data-aba="saude" class="ativo">Saude</button>
+      <button data-aba="pessoas">Pessoas</button>
+      <button data-aba="espelho">Espelho</button>
+      <button data-aba="postos">Postos</button>
+      <button data-aba="fiscal">Arquivos fiscais</button>
+      <button data-aba="auditoria">Auditoria</button>
+      <button class="leve" id="btn-sair">Sair</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="aba-saude">
+      <h2>Saude do sistema</h2>
+      <p class="legenda">Confira antes de qualquer entrega a fiscalizacao.</p>
+      <div id="alertas"></div>
+      <div class="cartao" id="resumo-saude"></div>
+    </section>
+
+    <section id="aba-pessoas" hidden>
+      <h2>Trabalhadores</h2>
+      <p class="legenda">Cadastro, consentimento LGPD e biometria.</p>
+      <div class="cartao">
+        <div class="linha">
+          <div><label>CPF</label><input id="p-cpf" placeholder="000.000.000-00"></div>
+          <div><label>Nome</label><input id="p-nome" size="28"></div>
+          <div><label>Matricula</label><input id="p-matricula" size="10"></div>
+          <div><label>Cargo</label><input id="p-cargo" size="16"></div>
+          <div><label>Admissao</label><input id="p-admissao" type="date"></div>
+          <button class="acao" id="btn-salvar-pessoa">Salvar</button>
+        </div>
+        <p class="alerta erro" id="erro-pessoa" hidden></p>
+      </div>
+      <div class="cartao rolagem"><table id="tabela-pessoas"></table></div>
+    </section>
+
+    <section id="aba-espelho" hidden>
+      <h2>Espelho de ponto</h2>
+      <p class="legenda">Apuracao a partir do livro-razao. Nenhuma marcacao e alterada aqui.</p>
+      <div class="cartao">
+        <div class="linha">
+          <div><label>Trabalhador</label><select id="e-trabalhador"></select></div>
+          <div><label>De</label><input id="e-de" type="date"></div>
+          <div><label>Ate</label><input id="e-ate" type="date"></div>
+          <button class="acao" id="btn-espelho">Gerar</button>
+        </div>
+      </div>
+      <div id="saida-espelho"></div>
+    </section>
+
+    <section id="aba-postos" hidden>
+      <h2>Postos autorizados</h2>
+      <p class="legenda">Somente estes computadores registram ponto. Nenhum outro dispositivo consegue.</p>
+      <div class="cartao">
+        <div class="linha">
+          <div><label>Identificador</label><input id="po-id" placeholder="RECEPCAO-01"></div>
+          <div><label>Nome</label><input id="po-nome" size="24"></div>
+          <div><label>Local</label><input id="po-local" size="20"></div>
+          <button class="acao" id="btn-posto">Provisionar</button>
+        </div>
+        <div id="token-novo"></div>
+      </div>
+      <div class="cartao rolagem"><table id="tabela-postos"></table></div>
+    </section>
+
+    <section id="aba-fiscal" hidden>
+      <h2>Arquivos fiscais</h2>
+      <p class="legenda">AFD: o que o REP-P registrou. AEJ: o que a empresa apurou.</p>
+      <div class="cartao">
+        <div class="linha">
+          <div><label>De</label><input id="f-de" type="date"></div>
+          <div><label>Ate</label><input id="f-ate" type="date"></div>
+          <button class="acao" id="btn-afd">Baixar AFD</button>
+          <button class="acao" id="btn-aej">Baixar AEJ</button>
+        </div>
+      </div>
+      <div class="cartao rolagem"><h2 style="font-size:15px;margin-bottom:8px">Exportacoes anteriores</h2><table id="tabela-exportacoes"></table></div>
+    </section>
+
+    <section id="aba-auditoria" hidden>
+      <h2>Auditoria</h2>
+      <p class="legenda">Tudo que nao e marcacao: acessos, cadastros, exportacoes, excecoes.</p>
+      <div class="cartao rolagem"><table id="tabela-auditoria"></table></div>
+    </section>
+  </main>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>

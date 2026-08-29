@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meus registros de ponto</title>
+<link rel="stylesheet" href="../admin/estilo.css">
+</head>
+<body>
+<header><h1>Meus registros de ponto</h1><nav><button class="leve" id="btn-sair">Encerrar</button></nav></header>
+<main>
+
+  <section id="sem-sessao">
+    <div class="cartao">
+      <h2>Identifique-se no terminal</h2>
+      <p class="legenda">Para ver seus registros, use o botao "Ver meus registros" no
+        terminal de ponto da empresa e encoste o dedo no leitor. A sessao vale 15 minutos.</p>
+    </div>
+    <div class="cartao">
+      <h2>Conferir um comprovante</h2>
+      <p class="legenda">Tem um comprovante em maos? Confira aqui se ele bate com o
+        registro guardado no sistema. Nao precisa de identificacao.</p>
+      <div class="linha">
+        <div><label>NSR</label><input id="v-nsr" inputmode="numeric" placeholder="000000123"></div>
+        <div style="flex:1"><label>Codigo de autenticidade (SHA-256)</label><input id="v-hash" style="width:100%"></div>
+        <button class="acao" id="btn-verificar">Conferir</button>
+      </div>
+      <div id="saida-verificacao"></div>
+    </div>
+  </section>
+
+  <section id="com-sessao" hidden>
+    <div class="cartao">
+      <div class="linha">
+        <div><label>De</label><input id="de" type="date"></div>
+        <div><label>Ate</label><input id="ate" type="date"></div>
+        <button class="acao" id="btn-buscar">Buscar</button>
+      </div>
+      <p class="legenda" id="identificacao"></p>
+    </div>
+    <div class="cartao rolagem"><table id="tabela"></table></div>
+    <div id="resumo"></div>
+  </section>
+
+</main>
+<script src="portal.js"></script>
+</body>
+</html>

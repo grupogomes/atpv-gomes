@@ -1,0 +1,24 @@
+{
+  "name": "relogio-de-ponto",
+  "version": "1.0.0",
+  "description": "Registrador Eletronico de Ponto por Programa (REP-P) com identificacao biometrica, conforme Portaria MTP 671/2021 e art. 74 da CLT",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=20.11" },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "migrar": "node src/db/migrar.js",
+    "seed": "node src/db/seed.js",
+    "afd": "node src/cli/gerar-afd.js",
+    "aej": "node src/cli/gerar-aej.js",
+    "posto": "node src/cli/provisionar-posto.js",
+    "teste": "node --test teste/*.test.js",
+    "test": "node --test teste/*.test.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.5.0",
+    "express": "^4.21.1",
+    "pdfkit": "^0.15.1"
+  }
+}
