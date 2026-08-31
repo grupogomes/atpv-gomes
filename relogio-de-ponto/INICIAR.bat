@@ -7,9 +7,20 @@ REM ===========================================================================
 title Relogio de Ponto - EM FUNCIONAMENTO
 cd /d "%~dp0"
 
+if exist "%~dp0node.exe" ( set "NODEEXE=%~dp0node.exe" ) else ( set "NODEEXE=node" )
+
 if not exist node_modules (
     echo.
     echo   O sistema ainda nao foi instalado.
+    echo   Clique duas vezes em INSTALAR.bat primeiro.
+    echo.
+    pause
+    exit /b 1
+)
+
+if not exist .env (
+    echo.
+    echo   O sistema ainda nao foi configurado.
     echo   Clique duas vezes em INSTALAR.bat primeiro.
     echo.
     pause
@@ -32,10 +43,9 @@ echo.
 echo   ------------------------------------------------------------
 echo.
 
-REM Abre o terminal de ponto no navegador padrao, depois de o servidor subir.
 start "" /b cmd /c "timeout /t 4 /nobreak >nul & start http://localhost:3000/kiosk/"
 
-node src\index.js
+"%NODEEXE%" "%~dp0src\index.js"
 
 echo.
 echo   O sistema foi encerrado.

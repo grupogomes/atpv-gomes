@@ -43,48 +43,58 @@ Write-Host ""
 Write-Host "  REP-P - Registrador Eletronico de Ponto" -ForegroundColor White
 Write-Host "  Instalacao no Windows" -ForegroundColor DarkGray
 
+# Pacote offline: quando existe um node.exe ao lado deste script, usamos ele.
+# Assim a instalacao nao depende de Node instalado na maquina nem de internet.
+$nodeEmbutido = Join-Path $raiz 'node.exe'
+$modoOffline = Test-Path $nodeEmbutido
+$node = if ($modoOffline) { $nodeEmbutido } else { 'node' }
+
 # ---------------------------------------------------------------------------
 Titulo "1. Requisitos"
 
-$node = Get-Command node -ErrorAction SilentlyContinue
-if (-not $node) {
-    Aviso "Node.js nao encontrado."
-    if (Get-Command winget -ErrorAction SilentlyContinue) {
-        $r = Perguntar "  Instalar agora pelo winget? (S/n)" "S"
-        if ($r.ToLower() -ne 'n') {
-            Write-Host "  Instalando Node.js LTS..."
-            & winget install --id OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements
-            # O winget mexe no PATH, mas so vale para processos novos: recarregamos.
-            $env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' +
-                        [Environment]::GetEnvironmentVariable('Path','User')
-            $node = Get-Command node -ErrorAction SilentlyContinue
+if ($modoOffline) {
+    # Pacote fechado: o Node vem junto e as dependencias ja estao prontas.
+    Ok "Node.js embutido no pacote: $((& $node --version).Trim())"
+    Ok "modo offline - nada para baixar"
+} else {
+    if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+        Aviso "Node.js nao encontrado."
+        if (Get-Command winget -ErrorAction SilentlyContinue) {
+            $r = Perguntar "  Instalar agora pelo winget? (S/n)" "S"
+            if ($r.ToLower() -ne 'n') {
+                Write-Host "  Instalando Node.js LTS..."
+                & winget install --id OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements
+                # O winget mexe no PATH, mas so vale para processos novos: recarregamos.
+                $env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' +
+                            [Environment]::GetEnvironmentVariable('Path','User')
+            }
+        }
+        if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+            Erro "Node.js e obrigatorio."
+            Write-Host "  Instale com:  winget install OpenJS.NodeJS.LTS" -ForegroundColor White
+            Write-Host "  ou baixe em:  https://nodejs.org  (versao LTS)" -ForegroundColor White
+            Write-Host "  Feche e reabra o terminal depois, e rode este script de novo."
+            exit 1
         }
     }
-    if (-not $node) {
-        Erro "Node.js e obrigatorio."
-        Write-Host "  Instale com:  winget install OpenJS.NodeJS.LTS" -ForegroundColor White
-        Write-Host "  ou baixe em:  https://nodejs.org  (versao LTS)" -ForegroundColor White
-        Write-Host "  Feche e reabra o terminal depois, e rode este script de novo."
+
+    $versao = (& $node --version).TrimStart('v')
+    $maior = [int]($versao.Split('.')[0])
+    if ($maior -lt 20) {
+        Erro "Node.js $versao e antigo demais. O sistema exige 20 ou superior."
+        Write-Host "  Atualize com:  winget upgrade OpenJS.NodeJS.LTS"
         exit 1
     }
+    # O better-sqlite3 traz binario pronto so para algumas versoes do Node.
+    # Fora dessas, o npm tenta COMPILAR — e ai precisa de Python e compilador C++.
+    $suportadas = @(20, 22, 23, 24, 25, 26)
+    if ($suportadas -notcontains $maior) {
+        Aviso "Node.js $versao e mais novo que as versoes com binario pronto do better-sqlite3."
+        Write-Host "     Se o passo 2 falhar, instale o Node 22 LTS:" -ForegroundColor White
+        Write-Host "       winget install OpenJS.NodeJS --version 22.20.0" -ForegroundColor Gray
+    }
+    Ok "Node.js $versao"
 }
-
-$versao = (& node --version).TrimStart('v')
-$maior = [int]($versao.Split('.')[0])
-if ($maior -lt 20) {
-    Erro "Node.js $versao e antigo demais. O sistema exige 20 ou superior."
-    Write-Host "  Atualize com:  winget upgrade OpenJS.NodeJS.LTS"
-    exit 1
-}
-# O better-sqlite3 traz binario pronto so para algumas versoes do Node. Fora
-# dessas, o npm tenta COMPILAR — e ai precisa de Python e do compilador C++.
-$suportadas = @(20, 22, 23, 24, 25, 26)
-if ($suportadas -notcontains $maior) {
-    Aviso "Node.js $versao e mais novo que as versoes com binario pronto do better-sqlite3."
-    Write-Host "     Se o passo 2 falhar, instale o Node 22 LTS:" -ForegroundColor White
-    Write-Host "       winget install OpenJS.NodeJS --version 22.20.0" -ForegroundColor Gray
-}
-Ok "Node.js $versao"
 
 if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
     Erro "npm nao encontrado (deveria vir junto com o Node)."
@@ -203,14 +213,14 @@ NODE_ENV=production
 # ---------------------------------------------------------------------------
 Titulo "4. Banco de dados"
 
-& npm run migrar
+& $node (Join-Path $raiz 'src\db\migrar.js')
 if ($LASTEXITCODE -ne 0) { Erro "Falha ao criar o banco."; exit 1 }
 Ok "banco pronto em dados\ponto.db"
 
 # ---------------------------------------------------------------------------
 Titulo "5. Testes"
 
-& npm run teste 2>&1 | Select-String -Pattern '^# (tests|pass|fail)'
+& $node --test (Join-Path $raiz 'teste') 2>&1 | Select-String -Pattern '^# (tests|pass|fail)'
 if ($LASTEXITCODE -ne 0) { Aviso "Algum teste falhou - revise antes de usar em producao." }
 else { Ok "todos os testes passaram" }
 
@@ -219,7 +229,7 @@ Titulo "6. Iniciar junto com o Windows"
 
 $r = Perguntar "  Criar a tarefa que sobe o sistema ao ligar o PC? (S/n)" "S"
 if ($r.ToLower() -ne 'n') {
-    $nodeExe = (Get-Command node).Source
+    $nodeExe = if ($modoOffline) { $nodeEmbutido } else { (Get-Command node).Source }
     $acao   = New-ScheduledTaskAction -Execute $nodeExe -Argument 'src\index.js' -WorkingDirectory $raiz
     $gatilho = New-ScheduledTaskTrigger -AtStartup
     $config  = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries `
@@ -282,10 +292,10 @@ Write-Host ""
 Write-Host "  Faltam tres passos, nesta ordem:" -ForegroundColor White
 Write-Host ""
 Write-Host "  1. Criar o administrador e o primeiro posto:" -ForegroundColor White
-Write-Host "       npm run seed" -ForegroundColor Gray
+Write-Host $(if ($modoOffline) { "       (o INSTALAR.bat ja faz isso a seguir)" } else { "       npm run seed" }) -ForegroundColor Gray
 Write-Host ""
 Write-Host "  2. Subir o sistema:" -ForegroundColor White
-Write-Host "       npm start" -ForegroundColor Gray
+Write-Host $(if ($modoOffline) { "       clique duas vezes em INICIAR.bat" } else { "       npm start" }) -ForegroundColor Gray
 Write-Host "     Quiosque ......  http://localhost:3000/kiosk/" -ForegroundColor Gray
 Write-Host "     Administracao .  http://localhost:3000/admin/" -ForegroundColor Gray
 Write-Host ""

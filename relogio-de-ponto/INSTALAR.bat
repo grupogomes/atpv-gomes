@@ -2,10 +2,13 @@
 REM ===========================================================================
 REM  Instalador do Relogio de Ponto - clique duas vezes neste arquivo.
 REM
-REM  As mensagens deste arquivo sao escritas SEM ACENTO de proposito: o console
-REM  do Windows troca a tabela de caracteres conforme o idioma e a configuracao
-REM  da maquina, e acento vira lixo na tela em boa parte dos casos. O sistema
-REM  em si (telas, comprovantes, relatorios) usa acentuacao normal.
+REM  Funciona de dois jeitos:
+REM   - PACOTE FECHADO: se existir um node.exe nesta pasta, usa ele. Nao baixa
+REM     nada, nao instala nada, funciona sem internet.
+REM   - PROJETO: sem node.exe, instala o Node e baixa as dependencias.
+REM
+REM  As mensagens sao escritas SEM ACENTO de proposito: o console do Windows
+REM  troca a tabela de caracteres conforme a maquina e acento vira lixo na tela.
 REM ===========================================================================
 
 title Instalador do Relogio de Ponto
@@ -32,14 +35,15 @@ echo   ============================================================
 echo.
 echo   Pasta: %CD%
 echo.
-echo   Isto vai levar alguns minutos. Nao feche esta janela.
-echo.
-timeout /t 3 /nobreak >nul
+timeout /t 2 /nobreak >nul
 
 REM ===========================================================================
 echo   [1/4] Verificando o Node.js...
 REM ===========================================================================
 
+set "NODEEXE=node"
+set "OFFLINE=0"
+if exist "%~dp0binarios" set "OFFLINE=1"
 call :atualizar_path
 
 where node >nul 2>&1
@@ -48,11 +52,23 @@ if %errorlevel% neq 0 goto instalar_node
 for /f "tokens=1 delims=." %%v in ('node --version') do set "NODEMAJOR=%%v"
 set "NODEMAJOR=!NODEMAJOR:v=!"
 
+if "!OFFLINE!"=="1" (
+    REM Pacote fechado: temos binario do banco para o Node 22 e para o 24.
+    set "ABIDE="
+    if "!NODEMAJOR!"=="22" set "ABIDE=127"
+    if "!NODEMAJOR!"=="24" set "ABIDE=137"
+    if "!ABIDE!"=="" (
+        echo         Node !NODEMAJOR! nao acompanha este pacote. Instalando o Node 22...
+        goto instalar_node22
+    )
+    for /f %%v in ('node --version') do echo         Node %%v encontrado. OK.
+    goto dependencias
+)
+
 REM Versoes para as quais o better-sqlite3 publica binario pronto. Fora dessa
 REM faixa o npm tenta compilar da fonte e exige Python e compilador C++.
 set "OK=0"
 for %%n in (20 22 23 24 25 26) do if "!NODEMAJOR!"=="%%n" set "OK=1"
-
 if "!OK!"=="0" (
     echo         Node !NODEMAJOR! nao tem binario pronto. Instalando o Node 22...
     goto instalar_node22
@@ -65,6 +81,7 @@ goto dependencias
 echo         Node.js nao encontrado. Instalando...
 where winget >nul 2>&1
 if %errorlevel% neq 0 goto sem_winget
+if "!OFFLINE!"=="1" goto instalar_node22
 winget install --id OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements --silent
 call :atualizar_path
 where node >nul 2>&1
@@ -77,6 +94,7 @@ where winget >nul 2>&1
 if %errorlevel% neq 0 goto sem_winget
 winget install --id OpenJS.NodeJS --version 22.20.0 --accept-source-agreements --accept-package-agreements --silent
 call :atualizar_path
+if "!OFFLINE!"=="1" set "ABIDE=127"
 goto dependencias
 
 :sem_winget
@@ -92,10 +110,25 @@ exit /b 1
 REM ===========================================================================
 :dependencias
 echo.
-echo   [2/4] Baixando os componentes do sistema...
-echo         (isso leva um ou dois minutos)
+echo   [2/4] Componentes do sistema...
 REM ===========================================================================
 
+if "!OFFLINE!"=="1" (
+    echo         Ja vem prontos no pacote.
+    echo         Instalando o banco de dados para o Node !NODEMAJOR!...
+    copy /y "%~dp0binarios\better_sqlite3-abi!ABIDE!.node" ^
+            "%~dp0node_modules\better-sqlite3\build\Release\better_sqlite3.node" >nul
+    if errorlevel 1 goto erro_binario
+    echo         OK.
+    goto configurar
+)
+
+if exist node_modules (
+    echo         Ja instalados. OK.
+    goto configurar
+)
+
+echo         Baixando... ^(leva um ou dois minutos^)
 call npm install --omit=dev --no-audit --no-fund --loglevel=error
 if %errorlevel% neq 0 (
     echo.
@@ -108,6 +141,7 @@ if %errorlevel% neq 0 (
 echo         Componentes instalados. OK.
 
 REM ===========================================================================
+:configurar
 echo.
 echo   [3/4] Configurando o sistema...
 echo.
@@ -122,7 +156,7 @@ echo   [4/4] Criando o seu acesso...
 echo.
 REM ===========================================================================
 
-call npm run seed
+node "%~dp0src\db\seed.js"
 
 echo.
 echo   ============================================================
@@ -143,14 +177,20 @@ REM ===========================================================================
 echo.
 echo   [X] Nao foi possivel baixar os componentes.
 echo.
-echo       Se apareceu a mensagem "No prebuilt binaries found" no texto acima,
-echo       o problema e a versao do Node. Rode este comando e tente de novo:
+echo       Se apareceu "No prebuilt binaries found" no texto acima, o problema
+echo       e a versao do Node - nao faltam ferramentas de compilacao. Rode:
 echo.
 echo         winget install OpenJS.NodeJS --version 22.20.0
 echo.
-echo       Se nao apareceu, verifique a conexao com a internet.
+echo       Feche esta janela, apague a pasta node_modules e comece de novo.
 echo.
-echo       Mande o texto acima para o suporte.
+pause
+exit /b 1
+
+:erro_binario
+echo.
+echo   [X] Nao foi possivel instalar o banco de dados.
+echo       Confira se a pasta node_modules veio junto no pacote.
 echo.
 pause
 exit /b 1
