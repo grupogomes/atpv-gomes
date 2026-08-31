@@ -296,7 +296,8 @@ npm run posto -- RECEPCAO-01 "Recepção - terminal 1"
 
 | Sintoma | O que é |
 |---|---|
-| `npm install` falha em `better-sqlite3` | faltam ferramentas de build: `winget install Microsoft.VisualStudio.2022.BuildTools`, marcando "Desenvolvimento para desktop com C++" |
+| `npm install` falha em `better-sqlite3` com **"No prebuilt binaries found"** | é a **versão do Node**, não falta de ferramenta. O `better-sqlite3` só traz binário pronto para algumas versões e tentou compilar. Instale o Node 22 LTS: `winget install OpenJS.NodeJS --version 22.20.0`, feche e reabra o terminal, apague `node_modules` e rode de novo |
+| `npm install` falha em `better-sqlite3` **sem** aquela linha | aí sim faltam as ferramentas de build: `winget install Microsoft.VisualStudio.2022.BuildTools`, marcando "Desenvolvimento para desktop com C++" |
 | `node não é reconhecido` | feche e reabra o PowerShell depois de instalar o Node |
 | `Este equipamento não está autorizado` | token do posto perdido (dados do navegador limpos) ou posto desativado — reemita com `npm run posto` |
 | `Marcação só é aceita nos terminais da empresa` | o IP de origem está fora de `REDES_AUTORIZADAS` |
