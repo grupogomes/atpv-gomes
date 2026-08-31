@@ -128,6 +128,65 @@ biometrias irrecuperáveis (as marcações continuam legíveis).
 
 ---
 
+## Onde cada peça precisa morar
+
+O leitor biométrico é USB. Isso decide o resto:
+
+- **O agente biométrico roda obrigatoriamente no PC onde o leitor está
+  plugado.** Não tem escapatória: o SDK do fabricante fala com o USB daquela
+  máquina.
+- **O servidor pode rodar em qualquer máquina da rede** — inclusive na mesma.
+
+Para uma empresa pequena, a recomendação é **uma máquina só**: servidor,
+agente e quiosque no computador da entrada, onde o leitor está. Menos peça,
+menos ponto de falha, e o ponto continua funcionando mesmo que a rede caia. O
+RH acessa `/admin/` do próprio computador, pela rede local.
+
+Só separe o servidor se o PC da entrada for fraco, se houver mais de um
+terminal, ou se aquele PC for desligado no fim do dia.
+
+## Testar numa máquina e mover para outra
+
+Testar antes num computador e depois levar para o definitivo é o caminho certo.
+Três cuidados:
+
+**1. Não leve o banco de teste.** Vá para produção com banco limpo — as
+marcações de teste ficariam misturadas com as reais no AFD, e o AFD é imutável.
+Apague `dados\ponto.db` na máquina definitiva antes de começar, ou simplesmente
+não copie a pasta `dados\`.
+
+**2. Não copie `node_modules`.** O `better-sqlite3` tem binário nativo compilado
+para aquela máquina. Rode `npm install` no destino.
+
+**3. Decida sobre as chaves.** O jeito mais limpo é clonar o projeto de novo no
+computador definitivo e rodar o `instalar.ps1` lá, gerando chaves novas. As
+biometrias do teste param de funcionar — o que é justamente o esperado, já que
+elas eram de teste.
+
+Resumindo, no computador definitivo:
+
+```powershell
+git clone https://github.com/grupogomes/atpv-gomes
+cd atpv-gomes\relogio-de-ponto
+git checkout claude/biometric-time-clock-41yx0w
+powershell -ExecutionPolicy Bypass -File instalar.ps1
+npm run seed
+```
+
+E provisione um posto novo para aquela máquina — o token do posto de teste não
+vale mais nada lá:
+
+```powershell
+npm run posto -- RECEPCAO-01 "Recepção - terminal 1"
+```
+
+> **Depois que entrar em produção, nunca mais gere `CHAVE_BIOMETRIA` nova.**
+> Ela é o que decifra os templates cadastrados. Perdê-la significa recadastrar
+> a digital de todo mundo. As marcações continuam legíveis — elas não são
+> cifradas — mas as biometrias, não.
+
+---
+
 ## Quando der errado
 
 | Sintoma | O que é |
