@@ -110,6 +110,7 @@ docs/
   LEGISLACAO.md          a análise legal completa
   LGPD.md                biometria como dado sensível
   INSTALACAO.md          instalar no computador da empresa
+  INSTALACAO-WINDOWS.md  roteiro do Windows, com instalador PowerShell
   HOMOLOGACAO.md         o que ainda falta antes do uso oficial
 ```
 
