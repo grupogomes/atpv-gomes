@@ -47,6 +47,12 @@ npm run aej -- 2026-08-01 2026-08-31
 Stack: Node.js 20+, ESM puro sem passo de build, Express, better-sqlite3,
 pdfkit. Front em HTML/CSS/JS sem framework nem CDN (a CSP é fechada).
 
+## Testar sem o leitor
+
+Com `BIOMETRIA_DRIVER=simulador`, a "digital" é uma palavra (senha de dedo),
+definida em `POST /api/ponto/simulador/dedo` e no painel ao cadastrar. Com o
+driver real essas rotas respondem 404 — ver `src/http/simulador.js`.
+
 ## Instalação
 
 Windows: siga `docs/INSTALACAO-WINDOWS.md` (há um `instalar.ps1` que faz o

@@ -4,6 +4,7 @@
 const $ = (id) => document.getElementById(id);
 let sessao = sessionStorage.getItem('repp.admin') || '';
 let pessoas = [];
+let modoTeste = false;
 
 function esc(texto) {
   const div = document.createElement('div');
@@ -88,6 +89,7 @@ for (const botao of document.querySelectorAll('nav button[data-aba]')) {
 
 async function carregarSaude() {
   const s = await api('/saude');
+  modoTeste = Boolean(s.modoTeste);
   $('alertas').innerHTML = s.alertas.length
     ? s.alertas.map((a) => `<div class="alerta">${esc(a)}</div>`).join('')
     : '<div class="alerta ok">Nenhum alerta. Sistema em conformidade operacional.</div>';
@@ -146,6 +148,20 @@ async function cadastrarDigital(id) {
   const dedo = prompt('Qual dedo? (ex.: polegar_direito, indicador_esquerdo)');
   if (!dedo) return;
   try {
+    // Sem leitor plugado, a "digital" e uma palavra. A mesma palavra digitada
+    // no quiosque identifica esta pessoa. So vale em modo de teste.
+    if (modoTeste) {
+      const semente = prompt(
+        'MODO DE TESTE (sem leitor biométrico).\n\n' +
+        'Escolha uma senha de dedo para esta pessoa — a mesma palavra deverá ' +
+        'ser digitada no terminal na hora de bater o ponto.\n\n' +
+        'Ex.: o primeiro nome dela.'
+      );
+      if (!semente) return;
+      await api('/simulador/dedo', {
+        method: 'POST', body: JSON.stringify({ semente: semente.trim() })
+      });
+    }
     const resultado = await api(`/trabalhadores/${id}/biometria`, {
       method: 'POST', body: JSON.stringify({ dedo })
     });

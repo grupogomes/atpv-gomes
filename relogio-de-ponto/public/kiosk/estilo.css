@@ -89,3 +89,12 @@ button.secundario { background: transparent; border: 1px solid var(--borda); col
   border-radius: 8px; color: var(--texto);
 }
 .aviso-legal { margin-top: 16px; font-size: 12px; color: var(--suave); line-height: 1.6; }
+
+/* Modo de teste: precisa ser impossivel confundir com a tela de producao. */
+#modo-teste { margin-top: 16px; border: 1px solid var(--aviso);
+              border-radius: 10px; padding: 12px; text-align: left; }
+.aviso-teste { color: var(--aviso); font-size: 13px; font-weight: 600;
+               margin-bottom: 8px; line-height: 1.4; }
+#dedo-teste { font: inherit; width: 100%; padding: 10px;
+              background: var(--fundo); border: 1px solid var(--borda);
+              border-radius: 8px; color: var(--texto); }

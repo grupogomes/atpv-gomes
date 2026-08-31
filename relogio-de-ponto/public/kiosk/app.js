@@ -94,10 +94,31 @@ function voltar() {
 
 /* --- acoes -------------------------------------------------------------- */
 
+/**
+ * Em modo de teste nao existe leitor: mandamos antes qual "dedo" esta
+ * encostado. Com o driver real esta rota nem existe (404), e o campo tambem
+ * nao aparece na tela.
+ */
+async function prepararDedoDeTeste() {
+  if ($('modo-teste').hidden) return true;
+  const semente = $('dedo-teste').value.trim();
+  if (!semente) {
+    mostrarFalha('Digite a senha de dedo para testar.');
+    return false;
+  }
+  const resposta = await fetch('/api/ponto/simulador/dedo', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', ...cabecalhosPosto() },
+    body: JSON.stringify({ semente })
+  });
+  return resposta.ok;
+}
+
 async function marcar() {
   $('btn-marcar').disabled = true;
   $('btn-marcar').textContent = 'Encoste o dedo no leitor…';
   try {
+    if (!(await prepararDedoDeTeste())) return;
     const resposta = await fetch('/api/ponto/marcar', {
       method: 'POST',
       headers: { 'content-type': 'application/json', ...cabecalhosPosto() },
@@ -133,6 +154,7 @@ async function verificarLeitor() {
     }
     const { posto: p, leitor } = await resposta.json();
     $('txt-posto').textContent = `${p.nome} (${p.id})`;
+    $('modo-teste').hidden = leitor.modelo !== 'Simulador';
     $('luz-leitor').className = `ponto ${leitor.disponivel ? 'on' : 'off'}`;
     $('txt-leitor').textContent = leitor.disponivel
       ? `leitor pronto${leitor.modelo ? ` · ${leitor.modelo}` : ''}`
@@ -168,6 +190,7 @@ async function meusRegistros() {
   $('btn-meus-registros').disabled = true;
   $('btn-meus-registros').textContent = 'Encoste o dedo para identificar…';
   try {
+    if (!(await prepararDedoDeTeste())) return;
     const resposta = await fetch('/api/portal/abrir-sessao', {
       method: 'POST', headers: { 'content-type': 'application/json', ...cabecalhosPosto() }, body: '{}'
     });

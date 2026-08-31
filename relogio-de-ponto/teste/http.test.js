@@ -169,6 +169,57 @@ test('sessao administrativa da acesso e o AFD sai do endpoint fiscal', async () 
   assert.ok(texto.includes('TESTE LTDA'));
 });
 
+test('modo de teste permite marcar sem leitor, pela senha de dedo', async () => {
+  // E o caminho de quem esta conferindo o sistema num computador que ainda
+  // nao tem o leitor plugado.
+  simulador.apresentarDedo('outra-coisa');
+
+  const definir = await pedir('/api/ponto/simulador/dedo', {
+    method: 'POST',
+    headers: { 'x-posto-id': 'RECEPCAO-01', 'x-posto-token': posto.token },
+    body: JSON.stringify({ semente: 'ana-polegar' })
+  });
+  assert.equal(definir.status, 200);
+
+  const marcacao = await pedir('/api/ponto/marcar', {
+    method: 'POST', body: '{}',
+    headers: { 'x-posto-id': 'RECEPCAO-01', 'x-posto-token': posto.token }
+  });
+  assert.equal(marcacao.status, 200);
+  assert.equal((await marcacao.json()).marcacao.trabalhadorNome, 'Ana Souza');
+});
+
+test('a rota de teste exige a senha de dedo e o posto autenticado', async () => {
+  const semSemente = await pedir('/api/ponto/simulador/dedo', {
+    method: 'POST',
+    headers: { 'x-posto-id': 'RECEPCAO-01', 'x-posto-token': posto.token },
+    body: '{}'
+  });
+  assert.equal(semSemente.status, 400);
+
+  const semPosto = await pedir('/api/ponto/simulador/dedo', {
+    method: 'POST', body: JSON.stringify({ semente: 'ana-polegar' })
+  });
+  assert.equal(semPosto.status, 403);
+});
+
+test('com o driver real a rota de teste nao existe', async () => {
+  // Nao pode haver caminho para injetar identidade num sistema em producao.
+  const { config } = await import('../src/config.js');
+  const original = config.biometria.driver;
+  config.biometria.driver = 'agente';
+  try {
+    const resposta = await pedir('/api/ponto/simulador/dedo', {
+      method: 'POST',
+      headers: { 'x-posto-id': 'RECEPCAO-01', 'x-posto-token': posto.token },
+      body: JSON.stringify({ semente: 'ana-polegar' })
+    });
+    assert.equal(resposta.status, 404);
+  } finally {
+    config.biometria.driver = original;
+  }
+});
+
 test('supervisor e obrigatorio na marcacao por credencial alternativa', async () => {
   const resposta = await pedir('/api/ponto/marcar-alternativo', {
     method: 'POST',

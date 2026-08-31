@@ -145,6 +145,29 @@ RH acessa `/admin/` do próprio computador, pela rede local.
 Só separe o servidor se o PC da entrada for fraco, se houver mais de um
 terminal, ou se aquele PC for desligado no fim do dia.
 
+## Testar sem o leitor biométrico
+
+Dá para conferir o sistema inteiro — cadastro, marcação, comprovante, espelho,
+AFD — num computador que ainda não tem o leitor plugado. O instalador já deixa
+`BIOMETRIA_DRIVER=simulador` por padrão, que é o modo de teste.
+
+No lugar da digital, cada pessoa recebe uma **senha de dedo**: qualquer
+palavra. A mesma palavra sempre identifica a mesma pessoa.
+
+1. No painel, aba **Pessoas** → *Cadastrar digital*. Ele pergunta a senha de
+   dedo — use o primeiro nome da pessoa, por exemplo.
+2. No quiosque aparece uma tarja amarela **MODO DE TESTE** com um campo. Digite
+   a mesma palavra e clique em *Registrar ponto*.
+
+Palavra errada é recusada como digital não reconhecida, igual ao leitor real.
+
+> Quando o leitor de verdade entrar (`BIOMETRIA_DRIVER=agente`), a tarja some
+> sozinha e a rota que injeta a identidade deixa de existir — responde 404. Não
+> há caminho para forjar identidade num sistema em produção.
+
+O painel de **Saúde** acusa o modo simulador em vermelho enquanto ele estiver
+ligado. Não coloque ninguém para bater ponto de verdade assim.
+
 ## Testar numa máquina e mover para outra
 
 Testar antes num computador e depois levar para o definitivo é o caminho certo.

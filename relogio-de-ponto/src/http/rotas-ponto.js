@@ -8,6 +8,7 @@ import { buscarPorCpf } from '../servicos/trabalhadores.js';
 import { sessaoValida } from '../servicos/usuarios.js';
 import { registrarAuditoria } from '../servicos/auditoria.js';
 import { lerRegistro } from '../dominio/livro.js';
+import { definirDedoSimulado } from './simulador.js';
 
 export const rotasPonto = express.Router();
 
@@ -75,6 +76,9 @@ rotasPonto.post('/marcar-alternativo', limitar({ janelaMs: 60000, maximo: 10 }),
     responderErro(res, erro);
   }
 });
+
+/** Modo de teste: define qual "dedo" esta encostado. So com o simulador. */
+rotasPonto.post('/simulador/dedo', definirDedoSimulado);
 
 /** Comprovante em PDF da ultima marcacao emitida no posto. */
 rotasPonto.get('/comprovante/:nsr.pdf', async (req, res) => {

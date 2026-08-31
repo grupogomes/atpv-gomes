@@ -21,6 +21,7 @@ import { sha256 } from '../seguranca/cripto.js';
 import { config } from '../config.js';
 import { TERMO_BIOMETRIA } from '../dominio/termo.js';
 import { NATUREZAS } from '../dominio/naturezas.js';
+import { definirDedoSimulado, simuladorAtivo } from './simulador.js';
 import {
   salvarAtestado, avaliarAtestado, listarAtestados, buscarAtestado,
   lerCid, resumoDashboard
@@ -129,6 +130,8 @@ rotasAdmin.delete('/trabalhadores/:id/consentimento', exigirUsuario(['admin', 'r
   }
   res.json({ ok: true, aviso: 'Biometria eliminada. Cadastre uma credencial alternativa para este trabalhador.' });
 });
+
+rotasAdmin.post('/simulador/dedo', exigirUsuario(['admin', 'rh']), definirDedoSimulado);
 
 rotasAdmin.post('/trabalhadores/:id/biometria', exigirUsuario(['admin', 'rh']), async (req, res) => {
   try {
@@ -293,7 +296,10 @@ rotasAdmin.get('/saude', exigirUsuario(), async (req, res) => {
     alertas.push('Driver biométrico em modo SIMULADOR: não usar em produção.');
   }
 
-  res.json({ integridade, leitor, assinatura, semBiometria, alertas, rep: config.rep });
+  res.json({
+    integridade, leitor, assinatura, semBiometria, alertas,
+    rep: config.rep, modoTeste: simuladorAtivo()
+  });
 });
 
 rotasAdmin.get('/auditoria', exigirUsuario(['admin', 'rh']), (req, res) => {

@@ -29,6 +29,16 @@
     <p class="instrucao">Encoste o dedo no leitor para registrar seu ponto</p>
     <button id="btn-marcar">Registrar ponto</button>
     <button class="secundario" id="btn-meus-registros">Ver meus registros</button>
+
+    <!-- Só aparece com BIOMETRIA_DRIVER=simulador, para testar sem leitor -->
+    <div id="modo-teste" hidden>
+      <p class="aviso-teste">
+        MODO DE TESTE — sem leitor biométrico. Digite a mesma senha de dedo que
+        foi usada no cadastro da pessoa.
+      </p>
+      <input id="dedo-teste" autocomplete="off" spellcheck="false"
+             placeholder="senha de dedo (ex.: ana)">
+    </div>
     <p class="aviso-legal">
       A marcação é registrada exatamente no instante em que você a faz. O sistema
       não bloqueia nem ajusta horários (Portaria MTP nº 671/2021). Você recebe um
