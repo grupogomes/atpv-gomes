@@ -48,13 +48,25 @@ Titulo "1. Requisitos"
 
 $node = Get-Command node -ErrorAction SilentlyContinue
 if (-not $node) {
-    Erro "Node.js nao encontrado."
-    Write-Host ""
-    Write-Host "  Instale com:  winget install OpenJS.NodeJS.LTS" -ForegroundColor White
-    Write-Host "  ou baixe em:  https://nodejs.org  (versao LTS)" -ForegroundColor White
-    Write-Host ""
-    Write-Host "  Feche e reabra o terminal depois de instalar, e rode este script de novo."
-    exit 1
+    Aviso "Node.js nao encontrado."
+    if (Get-Command winget -ErrorAction SilentlyContinue) {
+        $r = Perguntar "  Instalar agora pelo winget? (S/n)" "S"
+        if ($r.ToLower() -ne 'n') {
+            Write-Host "  Instalando Node.js LTS..."
+            & winget install --id OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements
+            # O winget mexe no PATH, mas so vale para processos novos: recarregamos.
+            $env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' +
+                        [Environment]::GetEnvironmentVariable('Path','User')
+            $node = Get-Command node -ErrorAction SilentlyContinue
+        }
+    }
+    if (-not $node) {
+        Erro "Node.js e obrigatorio."
+        Write-Host "  Instale com:  winget install OpenJS.NodeJS.LTS" -ForegroundColor White
+        Write-Host "  ou baixe em:  https://nodejs.org  (versao LTS)" -ForegroundColor White
+        Write-Host "  Feche e reabra o terminal depois, e rode este script de novo."
+        exit 1
+    }
 }
 
 $versao = (& node --version).TrimStart('v')
@@ -210,6 +222,45 @@ if ($r.ToLower() -ne 'n') {
 }
 
 # ---------------------------------------------------------------------------
+Titulo "7. Leitor biometrico"
+
+$pastaAgente = Join-Path $raiz 'agente-biometrico\nitgen'
+$exeAgente = Join-Path $pastaAgente 'agente-nitgen.exe'
+
+if (Test-Path $exeAgente) {
+    Ok "agente NITGEN ja compilado"
+} else {
+    # Procura so nos lugares obvios: varrer o disco inteiro aqui seria lento.
+    $sdk = @(
+        "$env:ProgramFiles\NITGEN\eNBSP SDK\Bin\NITGEN.SDK.NBioBSP.dll",
+        "${env:ProgramFiles(x86)}\NITGEN\eNBSP SDK\Bin\NITGEN.SDK.NBioBSP.dll",
+        (Join-Path $pastaAgente 'NITGEN.SDK.NBioBSP.dll')
+    ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+    if ($sdk) {
+        Ok "SDK da NITGEN encontrado"
+        $r = Perguntar "  Compilar o agente do leitor agora? (S/n)" "S"
+        if ($r.ToLower() -ne 'n') {
+            & powershell -ExecutionPolicy Bypass -File (Join-Path $pastaAgente 'compilar.ps1')
+            if (Test-Path $exeAgente) {
+                # So agora vale ligar o driver real.
+                (Get-Content $envPath) -replace '^BIOMETRIA_DRIVER=.*', 'BIOMETRIA_DRIVER=agente' |
+                    Set-Content $envPath -Encoding UTF8
+                Ok "agente compilado e BIOMETRIA_DRIVER trocado para 'agente'"
+            }
+        }
+    } else {
+        Aviso "SDK da NITGEN nao encontrado - seguindo em MODO DE TESTE."
+        Write-Host "     O sistema funciona para conferir tudo, mas ninguem bate ponto"
+        Write-Host "     de verdade assim. Para ligar o leitor Hamster DX:"
+        Write-Host "       1. baixe http://www.nitgen.com.br/download/eNBSP_SDK_v4.85.zip"
+        Write-Host "       2. instale e plugue o leitor"
+        Write-Host "       3. rode  agente-biometrico\nitgen\compilar.ps1"
+        Write-Host "     Detalhes em agente-biometrico\nitgen\README.md"
+    }
+}
+
+# ---------------------------------------------------------------------------
 Titulo "Pronto"
 
 Write-Host ""
@@ -223,9 +274,13 @@ Write-Host "       npm start" -ForegroundColor Gray
 Write-Host "     Quiosque ......  http://localhost:3000/kiosk/" -ForegroundColor Gray
 Write-Host "     Administracao .  http://localhost:3000/admin/" -ForegroundColor Gray
 Write-Host ""
-Write-Host "  3. Instalar o agente do leitor biometrico e trocar no .env:" -ForegroundColor White
-Write-Host "       BIOMETRIA_DRIVER=agente" -ForegroundColor Gray
-Write-Host "     Ver agente-biometrico\README.md" -ForegroundColor Gray
+if (-not (Test-Path $exeAgente)) {
+    Write-Host "  3. Ligar o leitor biometrico (hoje em MODO DE TESTE):" -ForegroundColor White
+    Write-Host "       agente-biometrico\nitgen\README.md" -ForegroundColor Gray
+} else {
+    Write-Host "  3. Deixar o agente do leitor rodando sempre:" -ForegroundColor White
+    Write-Host "       agente-biometrico\nitgen\README.md  (secao 5)" -ForegroundColor Gray
+}
 Write-Host ""
 Write-Host "  Antes de usar oficialmente, leia docs\HOMOLOGACAO.md:" -ForegroundColor Yellow
 Write-Host "  faltam o certificado ICP-Brasil, o registro no INPI/ATTR e a" -ForegroundColor Yellow

@@ -22,7 +22,7 @@ Separando, três coisas melhoram:
 
 | Fabricante | SDK | Observação |
 |---|---|---|
-| Nitgen (Hamster DX, Pro) | eNBSP SDK (C/C#) | o mais comum no mercado brasileiro |
+| **Nitgen (Hamster DX, III, II)** | eNBSP SDK (C/C#) | **já implementado** — ver [`nitgen/`](nitgen/) |
 | Digital Persona / HID (U.are.U 4500) | U.are.U SDK (C/Java/.NET) | template ANSI/ISO |
 | Futronic (FS80, FS88) | FTRAPI (C) | |
 | Control iD (iDBio) | SDK próprio / REST | alguns modelos já expõem HTTP |
@@ -31,7 +31,16 @@ Separando, três coisas melhoram:
 Se o seu leitor **já expõe uma API HTTP** (caso de alguns Control iD), o agente
 vira um adaptador fino: traduza as respostas dele para o formato abaixo.
 
-## Como escrever o seu
+## Já pronto: NITGEN Hamster DX
+
+Se o seu leitor é um **Hamster DX** (ou Hamster II/III), o agente já está
+escrito: [`nitgen/README.md`](nitgen/README.md). Baixe o eNBSP SDK, rode
+`nitgen\compilar.ps1` e pronto.
+
+O Hamster DX é fabricado pela **NITGEN**; a Fingertech é a distribuidora no
+Brasil. O SDK a baixar é o da Nitgen.
+
+## Como escrever o seu (outros fabricantes)
 
 Implemente as três rotas de [`PROTOCOLO.md`](PROTOCOLO.md). Há um exemplo
 funcional em `exemplo-agente.js`, com o ponto exato onde entra a chamada ao SDK

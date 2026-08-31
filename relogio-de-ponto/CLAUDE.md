@@ -53,6 +53,13 @@ Com `BIOMETRIA_DRIVER=simulador`, a "digital" é uma palavra (senha de dedo),
 definida em `POST /api/ponto/simulador/dedo` e no painel ao cadastrar. Com o
 driver real essas rotas respondem 404 — ver `src/http/simulador.js`.
 
+## Leitor
+
+O leitor da empresa é um **NITGEN Hamster DX** (Fingertech é a distribuidora).
+O agente em C# está em `agente-biometrico/nitgen/`, compilado pelo `csc.exe`
+que já vem no Windows. Os pontos onde a API do eNBSP pode variar entre versões
+estão marcados com `>>> CONFERIR` no código.
+
 ## Instalação
 
 Windows: siga `docs/INSTALACAO-WINDOWS.md` (há um `instalar.ps1` que faz o

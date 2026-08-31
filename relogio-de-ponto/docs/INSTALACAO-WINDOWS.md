@@ -167,13 +167,26 @@ Confira o IP do servidor com `ipconfig` e ajuste `REDES_AUTORIZADAS` no `.env`.
 O sistema sai configurado com `BIOMETRIA_DRIVER=simulador`, que **não serve
 para produção** — o painel de Saúde avisa isso em vermelho.
 
-Para usar o leitor de verdade, instale o agente que conversa com o SDK do
-fabricante (`agente-biometrico\README.md`), conecte o leitor USB, e troque no
-`.env`:
+Para o **NITGEN Hamster DX** (o mais comum no Brasil, distribuído pela
+Fingertech) o agente já está pronto:
 
-```
-BIOMETRIA_DRIVER=agente
-```
+1. Baixe e instale o eNBSP SDK:
+   <http://www.nitgen.com.br/download/eNBSP_SDK_v4.85.zip>
+2. Plugue o leitor e confira no Gerenciador de Dispositivos.
+3. Compile o agente:
+   ```powershell
+   cd agente-biometrico\nitgen
+   .\compilar.ps1
+   ```
+4. Troque no `.env`:
+   ```
+   BIOMETRIA_DRIVER=agente
+   ```
+
+Se o SDK já estiver instalado quando você rodar o `instalar.ps1`, ele faz os
+passos 3 e 4 sozinho. Passo a passo completo em
+`agente-biometrico\nitgen\README.md`; outros fabricantes em
+`agente-biometrico\README.md`.
 
 Cadastre **dois dedos por pessoa**, de mãos diferentes: um curativo não pode
 obrigar todo mundo a usar a credencial alternativa.

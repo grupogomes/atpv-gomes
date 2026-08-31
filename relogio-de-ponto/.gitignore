@@ -7,3 +7,9 @@ dados/
 .env
 saida/
 *.log
+
+# Agente NITGEN: binarios do SDK do fabricante e o executavel compilado.
+# O SDK e proprietario e nao pode ser versionado; cada maquina baixa o seu.
+agente-biometrico/nitgen/*.dll
+agente-biometrico/nitgen/*.exe
+agente-biometrico/nitgen/*.pdb
