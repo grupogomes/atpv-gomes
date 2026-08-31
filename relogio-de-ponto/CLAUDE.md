@@ -62,8 +62,12 @@ estão marcados com `>>> CONFERIR` no código.
 
 ## Instalação
 
-Windows: siga `docs/INSTALACAO-WINDOWS.md` (há um `instalar.ps1` que faz o
-grosso). Linux/macOS: `docs/INSTALACAO.md`.
+Windows: `INSTALAR.bat` (duplo clique; eleva, instala Node, chama o
+`instalar.ps1` e o seed) e `INICIAR.bat` para o dia a dia. Detalhes em
+`docs/INSTALACAO-WINDOWS.md`. Linux/macOS: `docs/INSTALACAO.md`.
+
+Os `.bat` têm saída em ASCII sem acento de propósito — o console do Windows
+troca a tabela de caracteres conforme a máquina e acento vira lixo na tela.
 
 ## Idioma
 

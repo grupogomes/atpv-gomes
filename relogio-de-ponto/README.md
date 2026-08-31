@@ -38,6 +38,13 @@ atalho.
 
 ## Começando
 
+**No Windows** — clique duas vezes em **`INSTALAR.bat`**. Ele cuida de tudo:
+instala o Node se faltar, baixa os componentes, pergunta os dados da empresa,
+cria o banco e o seu acesso. Depois, para usar no dia a dia, clique em
+**`INICIAR.bat`**.
+
+**Linux ou macOS**, ou se preferir a linha de comando:
+
 ```bash
 npm install
 cp .env.exemplo .env      # preencha CNPJ, razão social e as chaves

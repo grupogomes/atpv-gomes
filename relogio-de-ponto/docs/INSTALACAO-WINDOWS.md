@@ -22,13 +22,26 @@ Sem git na máquina? `winget install Git.Git`, feche e reabra o PowerShell.
 
 ## 2. Rodar o instalador
 
+**Clique duas vezes em `INSTALAR.bat`.** É só isso.
+
+Ele pede permissão de administrador (clique em Sim), instala o Node.js se
+faltar, baixa os componentes, pergunta CNPJ, razão social e a faixa de rede,
+gera as chaves de segurança, cria o banco, roda os testes, oferece criar a
+tarefa de início automático e por fim cria o seu login.
+
+Se a primeira tentativa de baixar os componentes falhar, ele limpa e tenta
+de novo sozinho.
+
+Para usar no dia a dia depois: **`INICIAR.bat`**.
+
+<details><summary>Preferindo a linha de comando</summary>
+
 ```powershell
 powershell -ExecutionPolicy Bypass -File instalar.ps1
+npm run seed
+npm start
 ```
-
-Ele confere o Node, instala as dependências, pergunta CNPJ, razão social e a
-faixa de rede, gera as chaves de segurança, cria o banco, roda os testes e
-oferece criar a tarefa que sobe o sistema junto com o Windows.
+</details>
 
 Não apaga nada. Se o `.env` já existir, pergunta antes de trocar.
 
