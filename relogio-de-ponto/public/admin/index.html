@@ -23,6 +23,7 @@
     <nav>
       <button data-aba="saude" class="ativo">Saúde</button>
       <button data-aba="pessoas">Pessoas</button>
+      <button data-aba="atestados">Atestados</button>
       <button data-aba="espelho">Espelho</button>
       <button data-aba="postos">Postos</button>
       <button data-aba="fiscal">Arquivos fiscais</button>
@@ -54,6 +55,63 @@
         <p class="alerta erro" id="erro-pessoa" hidden></p>
       </div>
       <div class="cartao rolagem"><table id="tabela-pessoas"></table></div>
+    </section>
+
+    <section id="aba-atestados" hidden>
+      <h2>Atestados</h2>
+      <p class="legenda">Atestados de dias inteiros e de horas. Um atestado aceito abona
+        exatamente o que faltou para fechar a jornada — nunca vira hora extra.</p>
+
+      <div class="cartao">
+        <div class="linha">
+          <div><label>De</label><input id="at-de" type="date"></div>
+          <div><label>Até</label><input id="at-ate" type="date"></div>
+          <button class="acao" id="btn-painel">Atualizar painel</button>
+        </div>
+      </div>
+
+      <div id="at-alertas"></div>
+      <div class="indicadores" id="at-indicadores"></div>
+      <div class="graficos" id="at-graficos"></div>
+
+      <details class="cartao" id="at-lancar">
+        <summary style="cursor:pointer;font-weight:600">Lançar novo atestado</summary>
+        <div class="linha" style="margin-top:14px">
+          <div><label>Trabalhador</label><select id="at-trabalhador"></select></div>
+          <div><label>Tipo</label>
+            <select id="at-tipo">
+              <option value="dias">Dias inteiros</option>
+              <option value="horas">Horas</option>
+            </select>
+          </div>
+          <div><label>Natureza</label><select id="at-natureza"></select></div>
+        </div>
+        <div class="linha">
+          <div><label>Data inicial</label><input id="at-inicio" type="date"></div>
+          <div id="campo-fim"><label>Data final</label><input id="at-fim" type="date"></div>
+          <div id="campo-horas" hidden>
+            <label>Das / às</label>
+            <input id="at-hora-inicio" type="time" style="width:110px">
+            <input id="at-hora-fim" type="time" style="width:110px">
+          </div>
+        </div>
+        <div class="linha">
+          <div><label>Profissional emitente</label><input id="at-emitente" size="24"></div>
+          <div><label>CRM / CRO</label><input id="at-conselho" size="12"></div>
+          <div><label>CID (opcional)</label><input id="at-cid" size="8" placeholder="—"></div>
+          <div style="flex:1"><label>Observação</label><input id="at-obs" style="width:100%"></div>
+          <button class="acao" id="btn-salvar-atestado">Lançar</button>
+        </div>
+        <p class="legenda" style="margin-top:6px">
+          Informar o CID é faculdade do trabalhador — o sigilo médico não obriga a revelar
+          o diagnóstico. Quando informado, o campo é guardado cifrado e cada consulta fica
+          registrada na auditoria (LGPD, art. 5º, II).
+        </p>
+        <p class="alerta erro" id="at-erro" hidden></p>
+      </details>
+
+      <div class="cartao rolagem"><table id="at-tabela"></table></div>
+      <p class="legenda" id="at-fundamento"></p>
     </section>
 
     <section id="aba-espelho" hidden>
@@ -107,6 +165,8 @@
   </main>
 </div>
 
+<div id="dica" role="tooltip"></div>
 <script src="admin.js"></script>
+<script src="atestados.js"></script>
 </body>
 </html>

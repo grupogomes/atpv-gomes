@@ -20,6 +20,11 @@ import { paraDH } from '../dominio/datas.js';
 import { sha256 } from '../seguranca/cripto.js';
 import { config } from '../config.js';
 import { TERMO_BIOMETRIA } from '../dominio/termo.js';
+import { NATUREZAS } from '../dominio/naturezas.js';
+import {
+  salvarAtestado, avaliarAtestado, listarAtestados, buscarAtestado,
+  lerCid, resumoDashboard
+} from '../servicos/atestados.js';
 
 export const rotasAdmin = express.Router();
 
@@ -304,6 +309,64 @@ rotasAdmin.post('/usuarios', exigirUsuario(['admin']), (req, res) => {
   try {
     criarUsuario(req.body, req.usuario.login, req.ipOrigem);
     res.json({ ok: true });
+  } catch (erro) {
+    res.status(400).json({ erro: erro.message });
+  }
+});
+
+// --------------------------------------------------------------------------
+// Atestados e painel de ausencias
+// --------------------------------------------------------------------------
+
+/** Catalogo de naturezas, com o fundamento legal de cada uma. */
+rotasAdmin.get('/naturezas', exigirUsuario(), (req, res) => res.json(NATUREZAS));
+
+rotasAdmin.get('/atestados', exigirUsuario(), (req, res) => {
+  res.json(listarAtestados({
+    de: req.query.de, ate: req.query.ate,
+    trabalhadorId: req.query.trabalhador ? Number(req.query.trabalhador) : null,
+    situacao: req.query.situacao || null
+  }));
+});
+
+rotasAdmin.post('/atestados', exigirUsuario(['admin', 'rh']), (req, res) => {
+  try {
+    res.json(salvarAtestado(req.body, req.usuario.login, req.ipOrigem));
+  } catch (erro) {
+    res.status(400).json({ erro: erro.message });
+  }
+});
+
+rotasAdmin.post('/atestados/:id/avaliar', exigirUsuario(['admin', 'rh']), (req, res) => {
+  try {
+    res.json(avaliarAtestado({
+      id: Number(req.params.id),
+      situacao: req.body?.situacao,
+      motivo: req.body?.motivo
+    }, req.usuario.login, req.ipOrigem));
+  } catch (erro) {
+    res.status(400).json({ erro: erro.message });
+  }
+});
+
+/**
+ * Leitura do CID — dado de saude, portanto sensivel (LGPD art. 5º, II).
+ * Restrito a admin e RH, e cada acesso vai para a auditoria.
+ */
+rotasAdmin.get('/atestados/:id/cid', exigirUsuario(['admin', 'rh']), (req, res) => {
+  const atestado = buscarAtestado(Number(req.params.id));
+  if (!atestado) return res.status(404).json({ erro: 'Atestado não encontrado.' });
+  const cid = lerCid(Number(req.params.id), req.usuario.login, req.ipOrigem);
+  if (!cid) return res.json({ cid: null, aviso: 'Nenhum CID informado neste atestado.' });
+  res.json({ cid });
+});
+
+/** Números já agregados do painel de atestados. */
+rotasAdmin.get('/painel-atestados', exigirUsuario(), (req, res) => {
+  const { de, ate } = req.query;
+  if (!de || !ate) return res.status(400).json({ erro: 'Informe de e até (AAAA-MM-DD).' });
+  try {
+    res.json(resumoDashboard({ de, ate }));
   } catch (erro) {
     res.status(400).json({ erro: erro.message });
   }

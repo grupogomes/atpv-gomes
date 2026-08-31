@@ -66,6 +66,7 @@ function sair() {
 const carregadores = {
   saude: carregarSaude,
   pessoas: carregarPessoas,
+  atestados: () => window.painelAtestados.carregar(),
   espelho: carregarSeletorPessoas,
   postos: carregarPostos,
   fiscal: carregarExportacoes,
@@ -291,6 +292,19 @@ async function carregarAuditoria() {
       <td class="mono">${esc(a.alvo)}</td><td>${esc(a.detalhe)}</td>
       <td class="mono">${esc(a.origem_ip)}</td></tr>`).join('')}`;
 }
+
+/* --- ponte para os modulos irmaos --------------------------------------- */
+
+// atestados.js reaproveita a sessao e os formatadores daqui, em vez de
+// reimplementar chamada de API e escape de HTML.
+window.REPP = {
+  api,
+  esc,
+  hhmm,
+  dataBr,
+  pessoas: () => pessoas,
+  carregarPessoas: async () => { pessoas = await api('/trabalhadores?todos=1'); return pessoas; }
+};
 
 /* --- inicializacao ------------------------------------------------------ */
 

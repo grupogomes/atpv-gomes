@@ -3,6 +3,8 @@ import { config } from '../config.js';
 import { deDH, paraDH, dataLocal, minutosEntre, minutosParaHHMM } from '../dominio/datas.js';
 import { marcacoesDoTrabalhador } from './marcacao.js';
 import { buscarPorId } from './trabalhadores.js';
+import { minutosAbonados } from './atestados.js';
+import { rotuloNatureza } from '../dominio/naturezas.js';
 
 /**
  * ===========================================================================
@@ -143,8 +145,22 @@ export function apurarDia(trabalhadorId, data, parametros = PARAMETROS_CLT) {
   const escala = escalaDoDia(trabalhadorId, data);
   const previstoMin = calcularPrevisto(escala);
 
+  // Atestado aceito abona o que faltou para fechar a jornada — no maximo isso.
+  const abono = minutosAbonados({ trabalhadorId, data, previstoMin, trabalhadoMin });
+  const abonadoMin = abono.minutos;
+
   const ocorrencias = [];
   if (marcacaoImpar) ocorrencias.push('Número ímpar de marcações: jornada em aberto.');
+
+  for (const atestado of abono.atestados) {
+    ocorrencias.push(
+      atestado.tipo === 'dias'
+        ? `Ausência abonada por atestado (${rotuloNatureza(atestado.natureza)}), ` +
+          `de ${atestado.data_inicio} a ${atestado.data_fim}.`
+        : `Ausência parcial abonada por atestado (${rotuloNatureza(atestado.natureza)}), ` +
+          `das ${atestado.hora_inicio} às ${atestado.hora_fim}.`
+    );
+  }
 
   // Art. 71: intervalo intrajornada.
   if (trabalhadoMin > 360 && intervaloMin < parametros.intervaloMinimoAcima6hMin) {
@@ -161,8 +177,9 @@ export function apurarDia(trabalhadorId, data, parametros = PARAMETROS_CLT) {
     );
   }
 
-  // Art. 58, §1º: tolerancia. Aplicada sobre o saldo bruto do dia.
-  const saldoBruto = previstoMin > 0 ? trabalhadoMin - previstoMin : 0;
+  // Art. 58, §1º: tolerancia. Aplicada sobre o saldo bruto do dia, ja com o
+  // abono somado ao tempo efetivamente trabalhado.
+  const saldoBruto = previstoMin > 0 ? (trabalhadoMin + abonadoMin) - previstoMin : 0;
   const toleranciaAplicavel = Math.min(
     parametros.toleranciaDiariaMin,
     parametros.toleranciaPorMarcacaoMin * Math.max(marcacoes.length, 0)
@@ -194,6 +211,8 @@ export function apurarDia(trabalhadorId, data, parametros = PARAMETROS_CLT) {
     trabalhadoMin,
     intervaloMin,
     previstoMin,
+    abonadoMin,
+    atestados: abono.atestados,
     saldoMin,
     extraMin,
     faltaMin: Math.max(-saldoMin, 0),
@@ -242,10 +261,11 @@ export function espelhoDePonto(trabalhadorId, { de, ate }, parametros = PARAMETR
   const totais = dias.reduce((acumulado, dia) => ({
     trabalhadoMin: acumulado.trabalhadoMin + dia.trabalhadoMin,
     previstoMin: acumulado.previstoMin + dia.previstoMin,
+    abonadoMin: acumulado.abonadoMin + dia.abonadoMin,
     extraMin: acumulado.extraMin + dia.extraMin,
     faltaMin: acumulado.faltaMin + dia.faltaMin,
     noturnoMin: acumulado.noturnoMin + dia.noturnoMin
-  }), { trabalhadoMin: 0, previstoMin: 0, extraMin: 0, faltaMin: 0, noturnoMin: 0 });
+  }), { trabalhadoMin: 0, previstoMin: 0, abonadoMin: 0, extraMin: 0, faltaMin: 0, noturnoMin: 0 });
 
   totais.saldoMin = totais.extraMin - totais.faltaMin;
 

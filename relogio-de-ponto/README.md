@@ -57,7 +57,7 @@ Três telas:
 | Endereço | Para quem | O que faz |
 |---|---|---|
 | `/kiosk/` | trabalhador, no terminal da empresa | bate o ponto e mostra o comprovante |
-| `/admin/` | RH e gestores | cadastro, biometria, espelho, AFD/AEJ, auditoria |
+| `/admin/` | RH e gestores | cadastro, biometria, **atestados**, espelho, AFD/AEJ, auditoria |
 | `/portal/` | trabalhador | consulta os próprios registros e confere comprovantes |
 
 ### Provisionar um terminal
@@ -80,12 +80,14 @@ src/
   db/schema.sql          esquema; gatilhos de imutabilidade
   dominio/
     livro.js             livro-razão append-only + cadeia de hash + NSR
+    naturezas.js         naturezas de atestado e seu fundamento legal
     crc16.js             CRC-16/KERMIT do leiaute fiscal
     datas.js cpf.js      formatos do Anexo I
     termo.js             termo de consentimento LGPD, versionado
   servicos/
     marcacao.js          registro da marcação (o coração do sistema)
     jornada.js           apuração: tolerância, intervalo, noturno, extras
+    atestados.js         atestados de dias e de horas + painel de ausências
     biometria.js         templates cifrados em AES-256-GCM
     postos.js            terminais autorizados
     trabalhadores.js empregador.js usuarios.js auditoria.js
@@ -142,5 +144,24 @@ npm run teste
 Cobrem, entre outros: a cadeia de hash e a detecção de adulteração no banco, a
 recusa de marcação remota, o CRC-16 contra vetor de referência, os tamanhos de
 todas as linhas do AFD, a tolerância do art. 58 §1º, o intervalo do art. 71, a
-hora noturna reduzida do art. 73 e a preservação do registro original quando o
-RH lança um ajuste.
+hora noturna reduzida do art. 73, a preservação do registro original quando o
+RH lança um ajuste, e o abono de atestados — incluindo a regra de que atestado
+nunca vira hora extra e de que atestado pendente não abona nada.
+
+---
+
+## Painel de atestados
+
+O painel do RH tem uma aba de **atestados**, que trata dias inteiros e horas:
+
+- indicadores do período: atestados, dias abonados, horas abonadas, pessoas;
+- ranking por funcionário, em dias e em horas, e a evolução mês a mês;
+- alerta automático quando um afastamento chega a 15 dias (a partir do 16º o
+  benefício passa ao INSS — Lei 8.213/1991, art. 60, §3º) e quando há atestado
+  aguardando conferência;
+- o fundamento legal de cada natureza fica visível na própria tela.
+
+Regra central: **um atestado aceito abona exatamente o que faltou** para fechar
+a jornada prevista, nunca mais que isso. Atestado não vira hora extra. Pendente
+não abona; recusado fica no histórico com o motivo. Detalhes em
+[`docs/LEGISLACAO.md`](docs/LEGISLACAO.md) § 3.10.

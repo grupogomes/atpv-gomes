@@ -170,6 +170,63 @@ regra automática: configure a escala e acompanhe as ocorrências.
 
 ---
 
+## 3.10 Atestados — ausências justificadas
+
+Implementado em `src/servicos/atestados.js`, com o catálogo de fundamentos em
+`src/dominio/naturezas.js`. O sistema trata dois formatos:
+
+- **atestado de dias** — um ou mais dias inteiros;
+- **atestado de horas** — saída parcial, consulta, exame.
+
+### A regra que atravessa o módulo
+
+Um atestado aceito **abona exatamente o que faltou** para fechar a jornada
+prevista, e nunca mais que isso. Se a pessoa cumpriu o dia inteiro e ainda
+apresenta um atestado de 2h, o abono é zero — atestado não vira hora extra nem
+crédito de banco de horas. É uma linha só de código, e é o que impede o abuso
+mais comum nesse tipo de sistema.
+
+Atestado **pendente não abona nada**: entra na contagem e no alerta, fica de
+fora dos dias abonados. Atestado **recusado** continua no histórico, com o
+motivo — nada some.
+
+### Fundamentos por natureza
+
+| Natureza | Fundamento | Limite |
+|---|---|---|
+| Doença do trabalhador | Lei 605/1949, art. 6º, §1º e §2º; Súmula 15 do TST | do 16º dia consecutivo em diante o benefício é do INSS (Lei 8.213/1991, art. 60, §3º) |
+| Acidente de trabalho / doença ocupacional | Lei 8.213/1991, arts. 19 a 21; CLT art. 118 | 15 dias pela empresa; estabilidade de 12 meses após a alta; exige **CAT** |
+| Acompanhamento de consulta da gestante | CLT art. 473, X | até 2 dias |
+| Acompanhamento de filho em consulta | CLT art. 473, XI | 1 dia por ano, filho de até 6 anos |
+| Doação de sangue | CLT art. 473, IV | 1 dia a cada 12 meses |
+| Consulta / exame do trabalhador | atestado de comparecimento | sem previsão legal expressa — **veja a convenção coletiva** |
+
+O painel exibe o fundamento de cada natureza presente no período, para o RH não
+precisar procurar em outro lugar na hora de decidir.
+
+### Ordem preferencial dos atestados
+
+A Lei 605/1949, art. 6º, §2º, e a **Súmula 15 do TST** estabelecem ordem
+preferencial de quem emite o atestado (Previdência Social, SESI/SESC, sindicato,
+serviço médico da empresa ou convênio e, por último, médico particular). O
+sistema registra o emitente e o conselho profissional; a validação da ordem é
+decisão humana, feita ao aceitar ou recusar.
+
+### DSR
+
+Doença comprovada por atestado **não faz perder o descanso semanal remunerado**
+(Lei 605/1949, art. 6º). O abono do sistema já evita que o dia vire falta.
+
+### O CID é opcional
+
+Informar o diagnóstico é faculdade do trabalhador — o sigilo médico não obriga a
+revelá-lo, e a empresa não pode condicionar o aceite do atestado a isso. Quando
+informado, o CID é dado de saúde e portanto **dado pessoal sensível** (LGPD, art.
+5º, II): fica cifrado no banco, nunca aparece nas listagens, e **cada leitura vai
+para a auditoria**, com nome de quem consultou.
+
+---
+
 ## 4. Guarda dos registros
 
 - **CF, art. 7º, XXIX**: prescrição de **5 anos** no curso do contrato, até 2

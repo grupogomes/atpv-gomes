@@ -222,3 +222,43 @@ CREATE TABLE IF NOT EXISTS sessao_trabalhador (
   criado_em      TEXT NOT NULL,
   expira_em      TEXT NOT NULL
 );
+
+-- --------------------------------------------------------------------------
+-- Atestados (dias inteiros e horas)
+--
+-- O atestado ABONA a ausencia: nao apaga nem cria marcacao. Ele entra na
+-- apuracao cobrindo exatamente o que faltou para fechar a jornada prevista,
+-- nunca mais que isso — um atestado nunca vira hora extra.
+--
+-- LGPD: o CID e dado de saude, portanto dado pessoal sensivel (art. 5, II).
+-- Informa-lo e faculdade do trabalhador (sigilo medico), por isso o campo e
+-- opcional, fica cifrado, e cada leitura vai para a auditoria.
+-- --------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS atestado (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  trabalhador_id INTEGER NOT NULL REFERENCES trabalhador(id) ON DELETE CASCADE,
+  tipo           TEXT    NOT NULL CHECK (tipo IN ('dias','horas')),
+  natureza       TEXT    NOT NULL,
+  data_inicio    TEXT    NOT NULL,            -- AAAA-MM-DD
+  data_fim       TEXT    NOT NULL,            -- = data_inicio quando tipo='horas'
+  hora_inicio    TEXT,                        -- HH:MM, so quando tipo='horas'
+  hora_fim       TEXT,
+  dias           INTEGER NOT NULL DEFAULT 0,  -- dias corridos abrangidos
+  minutos        INTEGER NOT NULL DEFAULT 0,  -- minutos abrangidos (tipo='horas')
+  emitente       TEXT    NOT NULL DEFAULT '',
+  conselho       TEXT    NOT NULL DEFAULT '', -- CRM/CRO do profissional
+  cid_cifr       BLOB,                        -- opcional e cifrado (AES-256-GCM)
+  observacao     TEXT    NOT NULL DEFAULT '',
+  arquivo        TEXT,                        -- caminho do documento digitalizado
+  situacao       TEXT    NOT NULL DEFAULT 'pendente'
+                 CHECK (situacao IN ('pendente','aceito','recusado')),
+  motivo_recusa  TEXT,
+  entregue_em    TEXT,                        -- quando o papel chegou ao RH
+  registrado_por TEXT    NOT NULL,
+  registrado_em  TEXT    NOT NULL,
+  avaliado_por   TEXT,
+  avaliado_em    TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_atestado_trab ON atestado (trabalhador_id, data_inicio);
+CREATE INDEX IF NOT EXISTS idx_atestado_periodo ON atestado (data_inicio, data_fim);
