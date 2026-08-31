@@ -85,6 +85,20 @@
             </select>
           </div>
           <div><label>Natureza</label><select id="at-natureza"></select></div>
+          <div><label>Efeito</label>
+            <select id="at-efeito">
+              <option value="abona">Abona (não desconta)</option>
+              <option value="justifica">Justifica, sem abonar (desconta)</option>
+            </select>
+          </div>
+        </div>
+        <p class="legenda" id="at-efeito-nota"></p>
+        <div class="linha" id="campo-motivo-efeito" hidden>
+          <div style="flex:1">
+            <label>Motivo para alterar o efeito legal padrão (obrigatório)</label>
+            <input id="at-motivo-efeito" style="width:100%"
+                   placeholder="Ex.: CCT 2026/2027, cláusula 22 — abono de até 4h/mês para consulta.">
+          </div>
         </div>
         <div class="linha">
           <div><label>Data inicial</label><input id="at-inicio" type="date"></div>

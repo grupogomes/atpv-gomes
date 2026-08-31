@@ -16,7 +16,26 @@ export function db() {
   instancia.pragma('journal_mode = WAL');
   instancia.pragma('foreign_keys = ON');
   instancia.exec(fs.readFileSync(path.join(aqui, 'schema.sql'), 'utf8'));
+  aplicarMigracoes(instancia);
   return instancia;
+}
+
+/**
+ * Colunas acrescentadas depois que bancos ja estavam em producao.
+ * `CREATE TABLE IF NOT EXISTS` nao altera tabela existente, entao cada coluna
+ * nova entra aqui, de forma idempotente.
+ */
+function aplicarMigracoes(banco) {
+  const colunas = (tabela) =>
+    new Set(banco.prepare(`PRAGMA table_info(${tabela})`).all().map((c) => c.name));
+
+  const atestado = colunas('atestado');
+  if (!atestado.has('efeito')) {
+    banco.exec("ALTER TABLE atestado ADD COLUMN efeito TEXT NOT NULL DEFAULT 'abona'");
+  }
+  if (!atestado.has('motivo_efeito')) {
+    banco.exec("ALTER TABLE atestado ADD COLUMN motivo_efeito TEXT NOT NULL DEFAULT ''");
+  }
 }
 
 /** Fecha a conexao (usado nos testes). */

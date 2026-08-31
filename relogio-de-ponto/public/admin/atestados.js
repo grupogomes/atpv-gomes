@@ -133,17 +133,22 @@
       <div class="indicador">
         <div class="rotulo"><span class="ponto dias"></span>Dias abonados</div>
         <div class="valor">${t.dias}</div>
-        <div class="nota">dias inteiros, apenas atestados aceitos</div>
+        <div class="nota">${t.diasJustificados
+          ? `+ ${t.diasJustificados} dia(s) justificados, com desconto`
+          : 'dias inteiros, sem desconto no salário'}</div>
       </div>
       <div class="indicador">
         <div class="rotulo"><span class="ponto horas"></span>Horas abonadas</div>
         <div class="valor">${emHoras(t.minutos)}</div>
-        <div class="nota">saídas parciais, apenas atestados aceitos</div>
+        <div class="nota">${t.minutosJustificados
+          ? `+ ${emHoras(t.minutosJustificados)} justificadas, com desconto`
+          : 'saídas parciais, sem desconto no salário'}</div>
       </div>
       <div class="indicador">
         <div class="rotulo">Pessoas com atestado</div>
         <div class="valor">${t.pessoas}</div>
-        <div class="nota">de ${R().pessoas().filter((p) => p.ativo).length} ativo(s)</div>
+        <div class="nota">de ${R().pessoas().filter((p) => p.ativo).length} ativo(s)${
+          t.soJustificam ? ` · ${t.soJustificam} atestado(s) sem abono` : ''}</div>
       </div>`;
 
     const comDias = painel.ranking.filter((r) => r.dias > 0)
@@ -195,8 +200,8 @@
       return;
     }
     $('at-tabela').innerHTML = `
-      <tr><th>Trabalhador</th><th>Tipo</th><th>Período</th><th>Abono</th>
-          <th>Natureza</th><th>Emitente</th><th>Situação</th><th></th></tr>
+      <tr><th>Trabalhador</th><th>Tipo</th><th>Período</th><th>Ausência</th>
+          <th>Efeito</th><th>Natureza</th><th>Emitente</th><th>Situação</th><th></th></tr>
       ${atestados.map((a) => `
         <tr>
           <td>${R().esc(a.nome)}</td>
@@ -207,6 +212,9 @@
               : (a.tipo === 'horas' ? ` · ${R().esc(a.hora_inicio)}–${R().esc(a.hora_fim)}` : '')
           }</td>
           <td class="nao-quebra">${a.tipo === 'dias' ? emDias(a.dias) : emHoras(a.minutos)}</td>
+          <td class="nao-quebra"><span class="selo ${a.efeito}"${
+            a.motivo_efeito ? ` data-dica="${R().esc(a.motivo_efeito)}"` : ''
+          }>${a.efeito === 'abona' ? 'abona' : 'sem abono'}${a.motivo_efeito ? ' *' : ''}</span></td>
           <td>${R().esc(naturezas[a.natureza]?.rotulo || a.natureza)}</td>
           <td>${R().esc(a.emitente)}${a.conselho ? ` · ${R().esc(a.conselho)}` : ''}</td>
           <td><span class="selo ${a.situacao}">${a.situacao}</span>${
@@ -221,15 +229,20 @@
           </td>
         </tr>`).join('')}`;
 
+    // O asterisco no selo marca o atestado cujo efeito foi alterado pelo RH;
+    // o motivo aparece ao passar o mouse e fica na auditoria.
     // O fundamento legal das naturezas presentes fica visivel: o RH nao
     // precisa decorar nem procurar em outro lugar na hora de decidir.
     const presentes = [...new Set(atestados.map((a) => a.natureza))];
     $('at-fundamento').innerHTML = presentes
       .map((n) => naturezas[n]
         ? `<strong>${R().esc(naturezas[n].rotulo)}</strong>: ${R().esc(naturezas[n].fundamento)}. ` +
+          `${R().esc(naturezas[n].fundamentoEfeito || '')} ` +
           R().esc(naturezas[n].observacao || '')
         : '')
       .filter(Boolean).join('<br>');
+
+    ligarDicas($('at-tabela'));
 
     for (const botao of $('at-tabela').querySelectorAll('[data-aceitar]')) {
       botao.addEventListener('click', () => avaliar(botao.dataset.aceitar, 'aceito'));
@@ -273,6 +286,7 @@
       naturezas = await R().api('/naturezas');
       $('at-natureza').innerHTML = Object.entries(naturezas)
         .map(([chave, n]) => `<option value="${chave}">${R().esc(n.rotulo)}</option>`).join('');
+      alternarNatureza();
     }
     if (!R().pessoas().length) await R().carregarPessoas();
     $('at-trabalhador').innerHTML = R().pessoas()
@@ -291,8 +305,31 @@
     $('campo-horas').hidden = !porHoras;
   }
 
+  /**
+   * O efeito legal da hipotese escolhida aparece antes de salvar, junto com o
+   * fundamento. Sobrepor o padrao abre o campo de motivo — e obrigatorio.
+   */
+  function alternarNatureza() {
+    const n = naturezas[$('at-natureza').value];
+    if (!n) return;
+    $('at-efeito').value = n.efeitoPadrao;
+    $('at-efeito-nota').innerHTML =
+      `<strong>${n.efeitoPadrao === 'abona' ? 'Abona' : 'Justifica, sem abonar'}</strong> — ` +
+      `${R().esc(n.fundamentoEfeito || '')}` +
+      (n.observacao ? `<br>${R().esc(n.observacao)}` : '');
+    alternarEfeito();
+  }
+
+  function alternarEfeito() {
+    const n = naturezas[$('at-natureza').value];
+    const sobreposto = n && $('at-efeito').value !== n.efeitoPadrao;
+    $('campo-motivo-efeito').hidden = !sobreposto;
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     $('at-tipo').addEventListener('change', alternarTipo);
+    $('at-natureza').addEventListener('change', alternarNatureza);
+    $('at-efeito').addEventListener('change', alternarEfeito);
     $('btn-painel').addEventListener('click', () => carregar().catch((e) => alert(e.message)));
 
     $('btn-salvar-atestado').addEventListener('click', async () => {
@@ -308,13 +345,17 @@
             dataFim: $('at-fim').value || $('at-inicio').value,
             horaInicio: $('at-hora-inicio').value,
             horaFim: $('at-hora-fim').value,
+            efeito: $('at-efeito').value,
+            motivoEfeito: $('at-motivo-efeito').value,
             emitente: $('at-emitente').value,
             conselho: $('at-conselho').value,
             cid: $('at-cid').value,
             observacao: $('at-obs').value
           })
         });
-        for (const campo of ['at-emitente', 'at-conselho', 'at-cid', 'at-obs']) $(campo).value = '';
+        for (const campo of ['at-emitente', 'at-conselho', 'at-cid', 'at-obs', 'at-motivo-efeito']) {
+          $(campo).value = '';
+        }
         $('at-lancar').open = false;
         carregar();
       } catch (erro) {

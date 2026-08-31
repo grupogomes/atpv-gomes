@@ -3,7 +3,8 @@ import { paraDH } from '../dominio/datas.js';
 import { cifrar, decifrar } from '../seguranca/cripto.js';
 import { registrarAuditoria } from './auditoria.js';
 import { buscarPorId } from './trabalhadores.js';
-import { NATUREZAS, CHAVES_NATUREZA } from '../dominio/naturezas.js';
+import { NATUREZAS, CHAVES_NATUREZA, efeitoPadrao } from '../dominio/naturezas.js';
+import { config } from '../config.js';
 
 export class ErroAtestado extends Error {
   constructor(mensagem) { super(mensagem); this.codigo = 'ATESTADO_INVALIDO'; }
@@ -60,20 +61,43 @@ export function salvarAtestado(dados, ator, ip = '') {
     if (minutos > 24 * 60) throw new ErroAtestado('Intervalo maior que um dia.');
   }
 
+  // Efeito: abona (nao desconta) ou apenas justifica (desconta/compensa).
+  // O padrao vem da lei; sobrepor exige motivo escrito, porque e exatamente
+  // ai que mora a diferenca entre cumprir a norma e improvisar.
+  let efeito = efeitoPadrao(natureza);
+  let motivoEfeito = '';
+  if (efeito === 'justifica' && config.abonarConsulta && natureza === 'consulta') {
+    efeito = 'abona';
+    motivoEfeito = 'Abono de consulta previsto em convenção coletiva (ABONA_CONSULTA).';
+  }
+  if (dados.efeito && dados.efeito !== efeito) {
+    if (!['abona', 'justifica'].includes(dados.efeito)) {
+      throw new ErroAtestado('Efeito inválido.');
+    }
+    if (String(dados.motivoEfeito || '').trim().length < 5) {
+      throw new ErroAtestado(
+        'Alterar o efeito legal padrão exige motivo registrado ' +
+        '(cláusula de convenção coletiva, regulamento interno ou prática da empresa).'
+      );
+    }
+    efeito = dados.efeito;
+    motivoEfeito = String(dados.motivoEfeito).trim();
+  }
+
   // O CID e opcional. Se vier, entra cifrado — nunca em texto claro no banco.
   const cid = String(dados.cid || '').trim();
 
   const agora = paraDH(new Date());
   const info = db().prepare(`
-    INSERT INTO atestado (trabalhador_id, tipo, natureza, data_inicio, data_fim,
-      hora_inicio, hora_fim, dias, minutos, emitente, conselho, cid_cifr,
-      observacao, arquivo, entregue_em, registrado_por, registrado_em)
-    VALUES (@trabalhadorId, @tipo, @natureza, @dataInicio, @dataFim,
-      @horaInicio, @horaFim, @dias, @minutos, @emitente, @conselho, @cid,
-      @observacao, @arquivo, @entregueEm, @ator, @agora)
+    INSERT INTO atestado (trabalhador_id, tipo, natureza, efeito, motivo_efeito,
+      data_inicio, data_fim, hora_inicio, hora_fim, dias, minutos, emitente,
+      conselho, cid_cifr, observacao, arquivo, entregue_em, registrado_por, registrado_em)
+    VALUES (@trabalhadorId, @tipo, @natureza, @efeito, @motivoEfeito,
+      @dataInicio, @dataFim, @horaInicio, @horaFim, @dias, @minutos, @emitente,
+      @conselho, @cid, @observacao, @arquivo, @entregueEm, @ator, @agora)
   `).run({
-    trabalhadorId: trabalhador.id, tipo, natureza, dataInicio, dataFim,
-    horaInicio, horaFim, dias, minutos,
+    trabalhadorId: trabalhador.id, tipo, natureza, efeito, motivoEfeito,
+    dataInicio, dataFim, horaInicio, horaFim, dias, minutos,
     emitente: String(dados.emitente || '').trim(),
     conselho: String(dados.conselho || '').trim(),
     cid: cid ? cifrar(Buffer.from(cid, 'utf8')) : null,
@@ -85,7 +109,8 @@ export function salvarAtestado(dados, ator, ip = '') {
 
   registrarAuditoria({
     ator, acao: 'atestado.registro', alvo: `trabalhador:${trabalhador.id}`,
-    detalhe: `${tipo} · ${natureza} · ${dataInicio}${tipo === 'dias' ? ` a ${dataFim}` : ` ${horaInicio}-${horaFim}`}`,
+    detalhe: `${tipo} · ${natureza} · ${efeito} · ` +
+             `${dataInicio}${tipo === 'dias' ? ` a ${dataFim}` : ` ${horaInicio}-${horaFim}`}`,
     ip
   });
 
@@ -174,23 +199,37 @@ export function atestadosDoDia(trabalhadorId, data) {
 }
 
 /**
- * Minutos abonados em um dia, dado o previsto da escala.
+ * Efeito dos atestados de um dia sobre a jornada.
  *
- * Regra central: o abono cobre no maximo o que faltou. Atestado nunca gera
- * hora extra nem credito de banco de horas.
+ * Duas grandezas, deliberadamente separadas:
+ *   abonadoMin     — nao desconta do salario (atestado medico, art. 473 da CLT,
+ *                    ou previsao de convencao coletiva);
+ *   justificadoMin — a ausencia e justificada, mas as horas sao descontadas ou
+ *                    compensadas (declaracao de comparecimento, por exemplo).
+ *
+ * Regra que vale para as duas: cobrem no maximo o que faltou para fechar a
+ * jornada. Atestado nunca gera hora extra nem credito de banco de horas.
  */
 export function minutosAbonados({ trabalhadorId, data, previstoMin, trabalhadoMin }) {
+  const vazio = { minutos: 0, justificadoMin: 0, atestados: [] };
   const faltando = Math.max(previstoMin - trabalhadoMin, 0);
-  if (faltando === 0) return { minutos: 0, atestados: [] };
+  if (faltando === 0) return vazio;
 
   const atestados = atestadosDoDia(trabalhadorId, data);
-  if (atestados.length === 0) return { minutos: 0, atestados: [] };
+  if (atestados.length === 0) return vazio;
 
-  let cobertura = 0;
-  for (const atestado of atestados) {
-    cobertura += atestado.tipo === 'dias' ? previstoMin : atestado.minutos;
-  }
-  return { minutos: Math.min(cobertura, faltando), atestados };
+  const cobertura = (lista) => lista.reduce(
+    (soma, a) => soma + (a.tipo === 'dias' ? previstoMin : a.minutos), 0);
+
+  // O abono tem prioridade sobre a mera justificativa no consumo do que faltou:
+  // e o tratamento mais favoravel ao trabalhador entre os dois.
+  const abonadoMin = Math.min(cobertura(atestados.filter((a) => a.efeito === 'abona')), faltando);
+  const justificadoMin = Math.min(
+    cobertura(atestados.filter((a) => a.efeito !== 'abona')),
+    faltando - abonadoMin
+  );
+
+  return { minutos: abonadoMin, justificadoMin, atestados };
 }
 
 /**
@@ -214,7 +253,8 @@ export function resumoDashboard({ de, ate }) {
     const chave = atestado.trabalhador_id;
     const atual = porTrabalhador.get(chave) || {
       trabalhadorId: chave, nome: atestado.nome, cpf: atestado.cpf,
-      matricula: atestado.matricula, dias: 0, minutos: 0, quantidade: 0,
+      matricula: atestado.matricula, dias: 0, minutos: 0,
+      diasJustificados: 0, minutosJustificados: 0, quantidade: 0,
       maiorSequencia: 0, naturezas: new Set()
     };
     // Contamos apenas a parte do atestado que cai dentro do periodo pedido.
@@ -222,17 +262,28 @@ export function resumoDashboard({ de, ate }) {
     const fim = atestado.data_fim < ate ? atestado.data_fim : ate;
     const diasNoPeriodo = atestado.tipo === 'dias' ? diasCorridos(inicio, fim) : 0;
 
-    atual.dias += diasNoPeriodo;
-    atual.minutos += atestado.tipo === 'horas' ? atestado.minutos : 0;
+    if (atestado.efeito === 'abona') {
+      atual.dias += diasNoPeriodo;
+      atual.minutos += atestado.tipo === 'horas' ? atestado.minutos : 0;
+    } else {
+      atual.diasJustificados += diasNoPeriodo;
+      atual.minutosJustificados += atestado.tipo === 'horas' ? atestado.minutos : 0;
+    }
     atual.quantidade += 1;
     atual.maiorSequencia = Math.max(atual.maiorSequencia, atestado.dias);
     atual.naturezas.add(atestado.natureza);
     porTrabalhador.set(chave, atual);
 
     const mes = atestado.data_inicio.slice(0, 7);
-    const linhaMes = porMes.get(mes) || { mes, dias: 0, minutos: 0, quantidade: 0 };
-    linhaMes.dias += diasNoPeriodo;
-    linhaMes.minutos += atestado.tipo === 'horas' ? atestado.minutos : 0;
+    const linhaMes = porMes.get(mes)
+      || { mes, dias: 0, minutos: 0, diasJustificados: 0, minutosJustificados: 0, quantidade: 0 };
+    if (atestado.efeito === 'abona') {
+      linhaMes.dias += diasNoPeriodo;
+      linhaMes.minutos += atestado.tipo === 'horas' ? atestado.minutos : 0;
+    } else {
+      linhaMes.diasJustificados += diasNoPeriodo;
+      linhaMes.minutosJustificados += atestado.tipo === 'horas' ? atestado.minutos : 0;
+    }
     linhaMes.quantidade += 1;
     porMes.set(mes, linhaMes);
   }
@@ -240,6 +291,10 @@ export function resumoDashboard({ de, ate }) {
   const ranking = [...porTrabalhador.values()]
     .map((t) => ({ ...t, naturezas: [...t.naturezas] }))
     .sort((a, b) => (b.dias - a.dias) || (b.minutos - a.minutos));
+
+  // Quantos atestados so justificam (a ausencia nao e falta injustificada, mas
+  // as horas sao descontadas ou compensadas).
+  const soJustificam = aceitos.filter((a) => a.efeito !== 'abona');
 
   // Alertas acionaveis, com o fundamento junto para o RH nao ter que procurar.
   const alertas = [];
@@ -273,6 +328,9 @@ export function resumoDashboard({ de, ate }) {
       recusados: atestados.filter((a) => a.situacao === 'recusado').length,
       dias: totalDias,
       minutos: totalMinutos,
+      diasJustificados: ranking.reduce((s2, t) => s2 + t.diasJustificados, 0),
+      minutosJustificados: ranking.reduce((s2, t) => s2 + t.minutosJustificados, 0),
+      soJustificam: soJustificam.length,
       pessoas: ranking.length
     },
     ranking,

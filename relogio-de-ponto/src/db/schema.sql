@@ -239,6 +239,10 @@ CREATE TABLE IF NOT EXISTS atestado (
   trabalhador_id INTEGER NOT NULL REFERENCES trabalhador(id) ON DELETE CASCADE,
   tipo           TEXT    NOT NULL CHECK (tipo IN ('dias','horas')),
   natureza       TEXT    NOT NULL,
+  -- 'abona'     = justifica E nao desconta do salario
+  -- 'justifica' = justifica a ausencia, mas as horas sao descontadas
+  efeito         TEXT    NOT NULL DEFAULT 'abona' CHECK (efeito IN ('abona','justifica')),
+  motivo_efeito  TEXT    NOT NULL DEFAULT '',   -- preenchido ao sobrepor o padrao legal
   data_inicio    TEXT    NOT NULL,            -- AAAA-MM-DD
   data_fim       TEXT    NOT NULL,            -- = data_inicio quando tipo='horas'
   hora_inicio    TEXT,                        -- HH:MM, so quando tipo='horas'

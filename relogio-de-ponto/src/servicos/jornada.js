@@ -145,19 +145,26 @@ export function apurarDia(trabalhadorId, data, parametros = PARAMETROS_CLT) {
   const escala = escalaDoDia(trabalhadorId, data);
   const previstoMin = calcularPrevisto(escala);
 
-  // Atestado aceito abona o que faltou para fechar a jornada — no maximo isso.
+  // Atestado aceito cobre o que faltou para fechar a jornada — no maximo isso.
+  // `abonadoMin` nao desconta do salario; `justificadoMin` apenas retira o
+  // carater de falta injustificada, e as horas seguem descontadas ou
+  // compensadas. Ver src/dominio/naturezas.js.
   const abono = minutosAbonados({ trabalhadorId, data, previstoMin, trabalhadoMin });
   const abonadoMin = abono.minutos;
+  const justificadoMin = abono.justificadoMin;
 
   const ocorrencias = [];
   if (marcacaoImpar) ocorrencias.push('Número ímpar de marcações: jornada em aberto.');
 
   for (const atestado of abono.atestados) {
+    const verbo = atestado.efeito === 'abona'
+      ? 'abonada'
+      : 'justificada (sem abono: as horas são descontadas ou compensadas)';
     ocorrencias.push(
       atestado.tipo === 'dias'
-        ? `Ausência abonada por atestado (${rotuloNatureza(atestado.natureza)}), ` +
+        ? `Ausência ${verbo} por atestado (${rotuloNatureza(atestado.natureza)}), ` +
           `de ${atestado.data_inicio} a ${atestado.data_fim}.`
-        : `Ausência parcial abonada por atestado (${rotuloNatureza(atestado.natureza)}), ` +
+        : `Ausência parcial ${verbo} por atestado (${rotuloNatureza(atestado.natureza)}), ` +
           `das ${atestado.hora_inicio} às ${atestado.hora_fim}.`
     );
   }
@@ -212,10 +219,14 @@ export function apurarDia(trabalhadorId, data, parametros = PARAMETROS_CLT) {
     intervaloMin,
     previstoMin,
     abonadoMin,
+    justificadoMin,
     atestados: abono.atestados,
     saldoMin,
     extraMin,
     faltaMin: Math.max(-saldoMin, 0),
+    // Parte da falta que esta coberta por atestado sem abono: continua sendo
+    // desconto, mas nao e falta injustificada (nao gera punicao nem perda de DSR).
+    faltaJustificadaMin: Math.min(Math.max(-saldoMin, 0), justificadoMin),
     // Minutos noturnos ja convertidos pela hora reduzida de 52min30s.
     noturnoMin,
     noturnoRelogioMin: noturnoBruto,
@@ -262,10 +273,15 @@ export function espelhoDePonto(trabalhadorId, { de, ate }, parametros = PARAMETR
     trabalhadoMin: acumulado.trabalhadoMin + dia.trabalhadoMin,
     previstoMin: acumulado.previstoMin + dia.previstoMin,
     abonadoMin: acumulado.abonadoMin + dia.abonadoMin,
+    justificadoMin: acumulado.justificadoMin + dia.justificadoMin,
+    faltaJustificadaMin: acumulado.faltaJustificadaMin + dia.faltaJustificadaMin,
     extraMin: acumulado.extraMin + dia.extraMin,
     faltaMin: acumulado.faltaMin + dia.faltaMin,
     noturnoMin: acumulado.noturnoMin + dia.noturnoMin
-  }), { trabalhadoMin: 0, previstoMin: 0, abonadoMin: 0, extraMin: 0, faltaMin: 0, noturnoMin: 0 });
+  }), {
+    trabalhadoMin: 0, previstoMin: 0, abonadoMin: 0, justificadoMin: 0,
+    faltaJustificadaMin: 0, extraMin: 0, faltaMin: 0, noturnoMin: 0
+  });
 
   totais.saldoMin = totais.extraMin - totais.faltaMin;
 

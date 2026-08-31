@@ -13,6 +13,22 @@ const {
   salvarAtestado, avaliarAtestado, listarAtestados, lerCid,
   resumoDashboard, minutosAbonados, diasCorridos, ErroAtestado
 } = await import('../src/servicos/atestados.js');
+const { NATUREZAS, efeitoPadrao } = await import('../src/dominio/naturezas.js');
+
+test('o efeito padrão de cada natureza segue a lei', () => {
+  // Art. 473 da CLT diz "sem prejuizo do salario" -> abona.
+  assert.equal(efeitoPadrao('doacao_sangue'), 'abona');
+  assert.equal(efeitoPadrao('acompanhamento_filho'), 'abona');
+  assert.equal(efeitoPadrao('acompanhamento_gestacao'), 'abona');
+  // Atestado medico de incapacidade -> abona.
+  assert.equal(efeitoPadrao('doenca_propria'), 'abona');
+  assert.equal(efeitoPadrao('acidente_trabalho'), 'abona');
+  // Declaracao de comparecimento -> justifica, mas nao obriga o abono.
+  assert.equal(efeitoPadrao('consulta'), 'justifica');
+  assert.equal(efeitoPadrao('outro'), 'justifica');
+  // Toda natureza carrega o fundamento do efeito, para aparecer na tela.
+  for (const n of Object.values(NATUREZAS)) assert.ok(n.fundamentoEfeito);
+});
 
 registrarEmpregador({ tipoIdentificador: 1, documento: '11222333000181', razaoSocial: 'TESTE' }, 'x');
 const ana = salvarTrabalhador({ cpf: CPF_A, nome: 'Ana Souza' }, 'x');
@@ -58,16 +74,18 @@ test('atestado nasce pendente e so abona depois de aceito', () => {
   assert.ok(dia.ocorrencias.some((o) => /abonada por atestado/.test(o)));
 });
 
-test('atestado de horas abona apenas as horas do documento', () => {
-  // Trabalhou das 08:00 as 14:00 (6h) e saiu com atestado de 2h.
+test('atestado de horas do art. 473 abona apenas as horas do documento', () => {
+  // Trabalhou das 08:00 as 14:00 (6h) e saiu para acompanhar filho em consulta.
+  // CLT art. 473, XI: ausencia permitida "sem prejuizo do salario" -> abona.
   marcar('2026-08-04T08:00:00-03:00');
   marcar('2026-08-04T14:00:00-03:00');
 
   const atestado = salvarAtestado({
-    trabalhadorId: ana.id, tipo: 'horas', natureza: 'consulta',
+    trabalhadorId: ana.id, tipo: 'horas', natureza: 'acompanhamento_filho',
     dataInicio: '2026-08-04', horaInicio: '14:00', horaFim: '16:00',
     emitente: 'Clinica Central'
   }, 'rh.joana');
+  assert.equal(atestado.efeito, 'abona');
   avaliarAtestado({ id: atestado.id, situacao: 'aceito' }, 'rh.joana');
 
   const dia = apurarDia(ana.id, '2026-08-04');
@@ -76,6 +94,66 @@ test('atestado de horas abona apenas as horas do documento', () => {
   // Faltaram 8h - 6h = 2h, cobertas pelo atestado: dia fecha zerado.
   assert.equal(dia.faltaMin, 0);
   assert.equal(dia.extraMin, 0);
+});
+
+test('declaração de comparecimento justifica, mas NAO abona', () => {
+  // Consulta do proprio trabalhador, sem atestado de incapacidade: a lei nao
+  // obriga o abono (TRT-3 e TRT-4). As horas seguem descontadas.
+  marcar('2026-08-14T08:00:00-03:00');
+  marcar('2026-08-14T14:00:00-03:00');
+
+  const atestado = salvarAtestado({
+    trabalhadorId: ana.id, tipo: 'horas', natureza: 'consulta',
+    dataInicio: '2026-08-14', horaInicio: '14:00', horaFim: '16:00',
+    emitente: 'Clinica Central'
+  }, 'rh.joana');
+  assert.equal(atestado.efeito, 'justifica');
+  avaliarAtestado({ id: atestado.id, situacao: 'aceito' }, 'rh.joana');
+
+  const dia = apurarDia(ana.id, '2026-08-14');
+  assert.equal(dia.trabalhadoMin, 360);
+  assert.equal(dia.abonadoMin, 0);          // nada abonado
+  assert.equal(dia.justificadoMin, 120);    // mas a ausencia esta justificada
+  assert.equal(dia.faltaMin, 120);          // as 2h seguem como desconto
+  assert.equal(dia.faltaJustificadaMin, 120);
+  assert.ok(dia.ocorrencias.some((o) => /sem abono/.test(o)));
+});
+
+test('o RH pode abonar a consulta, mas so com motivo registrado', () => {
+  assert.throws(() => salvarAtestado({
+    trabalhadorId: ana.id, tipo: 'horas', natureza: 'consulta',
+    dataInicio: '2026-08-17', horaInicio: '09:00', horaFim: '11:00',
+    efeito: 'abona'
+  }, 'rh.joana'), /motivo registrado/);
+
+  const atestado = salvarAtestado({
+    trabalhadorId: ana.id, tipo: 'horas', natureza: 'consulta',
+    dataInicio: '2026-08-17', horaInicio: '09:00', horaFim: '11:00',
+    efeito: 'abona',
+    motivoEfeito: 'CCT 2026/2027, cláusula 22: abono de até 4h/mês para consulta.'
+  }, 'rh.joana');
+
+  assert.equal(atestado.efeito, 'abona');
+  assert.match(atestado.motivo_efeito, /cláusula 22/);
+});
+
+test('atestado médico de incapacidade parcial abona, diferente da declaração', () => {
+  // Quando o documento atesta INCAPACIDADE por parte do dia, e atestado
+  // medico com efeito parcial — abona, ainda que sejam poucas horas.
+  marcar('2026-08-18T08:00:00-03:00');
+  marcar('2026-08-18T13:00:00-03:00');
+
+  const atestado = salvarAtestado({
+    trabalhadorId: ana.id, tipo: 'horas', natureza: 'doenca_propria',
+    dataInicio: '2026-08-18', horaInicio: '13:00', horaFim: '17:00',
+    emitente: 'Dra. Marina', conselho: 'CRM/SP 148220'
+  }, 'rh.joana');
+  assert.equal(atestado.efeito, 'abona');
+  avaliarAtestado({ id: atestado.id, situacao: 'aceito' }, 'rh.joana');
+
+  const dia = apurarDia(ana.id, '2026-08-18');
+  assert.equal(dia.abonadoMin, 180); // faltavam 3h para fechar as 8h
+  assert.equal(dia.faltaMin, 0);
 });
 
 test('atestado nunca vira hora extra: o abono para no que faltou', () => {
@@ -169,7 +247,10 @@ test('painel agrega dias, horas, ranking e serie mensal', () => {
 
   assert.ok(painel.totais.atestados >= 3);
   assert.ok(painel.totais.dias >= 1);
+  // Minutos ABONADOS e minutos apenas JUSTIFICADOS sao contados separados.
   assert.ok(painel.totais.minutos >= 120);
+  assert.ok(painel.totais.minutosJustificados >= 120);
+  assert.ok(painel.totais.soJustificam >= 1);
   assert.ok(painel.ranking.length >= 1);
   // Ranking vem ordenado por dias, decrescente.
   for (let i = 1; i < painel.ranking.length; i++) {

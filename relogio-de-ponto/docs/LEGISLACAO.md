@@ -178,13 +178,49 @@ Implementado em `src/servicos/atestados.js`, com o catálogo de fundamentos em
 - **atestado de dias** — um ou mais dias inteiros;
 - **atestado de horas** — saída parcial, consulta, exame.
 
+### Justificar não é o mesmo que abonar
+
+Esta é a distinção que a prática mais confunde, e o sistema a trata como duas
+grandezas separadas:
+
+| | O que significa |
+|---|---|
+| **justifica** | a ausência deixa de ser falta injustificada: não gera punição e não faz perder o descanso semanal remunerado |
+| **abona** | além disso, **não desconta do salário** |
+
+**Atestado médico** — que atesta *incapacidade* para o trabalho — abona: o
+desconto é vedado. **Declaração de comparecimento** — que só prova que a pessoa
+*esteve* na clínica — justifica, mas **não obriga o abono**. O TRT-3 e o TRT-4
+já decidiram nesse sentido: declaração de comparecimento não se confunde com
+atestado médico. O empregador pode descontar as horas.
+
+Há três situações em que o abono passa a ser devido mesmo assim:
+
+1. **a hipótese está no art. 473 da CLT**, que diz expressamente "sem prejuízo
+   do salário" — doação de sangue, acompanhar filho de até 6 anos em consulta,
+   acompanhar consulta da esposa gestante, alistamento eleitoral. Se o direito é
+   de um dia e a pessoa gastou três horas, abonar as três horas está *dentro* do
+   direito;
+2. **convenção ou acordo coletivo** prevê o abono;
+3. **é prática habitual da empresa** — nesse caso incorporou ao contrato (CLT
+   art. 468; Súmula 51 do TST) e não pode ser suprimido de quem já tinha.
+
+Um detalhe que decide muitos casos: se o documento atesta **incapacidade por
+parte do dia** ("afastado por 4 horas"), é atestado médico com efeito parcial e
+abona. Não é "compareceu", é "esteve incapacitado".
+
+O efeito padrão de cada natureza vem da lei (`src/dominio/naturezas.js`). O RH
+pode sobrepor caso a caso, mas **só com motivo escrito** — é ali que mora a
+diferença entre cumprir a norma e improvisar. Quem tem abono de consulta
+previsto em CCT pode ligar `ABONA_CONSULTA=true` no `.env` e passar a abonar
+por padrão.
+
 ### A regra que atravessa o módulo
 
-Um atestado aceito **abona exatamente o que faltou** para fechar a jornada
+Um atestado aceito cobre **exatamente o que faltou** para fechar a jornada
 prevista, e nunca mais que isso. Se a pessoa cumpriu o dia inteiro e ainda
-apresenta um atestado de 2h, o abono é zero — atestado não vira hora extra nem
-crédito de banco de horas. É uma linha só de código, e é o que impede o abuso
-mais comum nesse tipo de sistema.
+apresenta um atestado de 2h, a cobertura é zero — atestado não vira hora extra
+nem crédito de banco de horas.
 
 Atestado **pendente não abona nada**: entra na contagem e no alerta, fica de
 fora dos dias abonados. Atestado **recusado** continua no histórico, com o
@@ -192,14 +228,14 @@ motivo — nada some.
 
 ### Fundamentos por natureza
 
-| Natureza | Fundamento | Limite |
-|---|---|---|
-| Doença do trabalhador | Lei 605/1949, art. 6º, §1º e §2º; Súmula 15 do TST | do 16º dia consecutivo em diante o benefício é do INSS (Lei 8.213/1991, art. 60, §3º) |
-| Acidente de trabalho / doença ocupacional | Lei 8.213/1991, arts. 19 a 21; CLT art. 118 | 15 dias pela empresa; estabilidade de 12 meses após a alta; exige **CAT** |
-| Acompanhamento de consulta da gestante | CLT art. 473, X | até 2 dias |
-| Acompanhamento de filho em consulta | CLT art. 473, XI | 1 dia por ano, filho de até 6 anos |
-| Doação de sangue | CLT art. 473, IV | 1 dia a cada 12 meses |
-| Consulta / exame do trabalhador | atestado de comparecimento | sem previsão legal expressa — **veja a convenção coletiva** |
+| Natureza | Fundamento | Efeito | Limite |
+|---|---|---|---|
+| Doença do trabalhador | Lei 605/1949, art. 6º, §1º e §2º; Súmula 15 do TST | **abona** | do 16º dia consecutivo em diante o benefício é do INSS (Lei 8.213/1991, art. 60, §3º) |
+| Acidente de trabalho / doença ocupacional | Lei 8.213/1991, arts. 19 a 21; CLT art. 118 | **abona** | 15 dias pela empresa; estabilidade de 12 meses após a alta; exige **CAT** |
+| Acompanhamento de consulta da gestante | CLT art. 473, X | **abona** | até 2 dias |
+| Acompanhamento de filho em consulta | CLT art. 473, XI | **abona** | 1 dia por ano, filho de até 6 anos |
+| Doação de sangue | CLT art. 473, IV | **abona** | 1 dia a cada 12 meses |
+| Consulta / exame do trabalhador | declaração de comparecimento | **justifica, sem abonar** | sem previsão legal de abono — **veja a convenção coletiva** |
 
 O painel exibe o fundamento de cada natureza presente no período, para o RH não
 precisar procurar em outro lugar na hora de decidir.

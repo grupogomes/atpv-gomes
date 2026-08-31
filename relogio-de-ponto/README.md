@@ -146,7 +146,8 @@ recusa de marcação remota, o CRC-16 contra vetor de referência, os tamanhos d
 todas as linhas do AFD, a tolerância do art. 58 §1º, o intervalo do art. 71, a
 hora noturna reduzida do art. 73, a preservação do registro original quando o
 RH lança um ajuste, e o abono de atestados — incluindo a regra de que atestado
-nunca vira hora extra e de que atestado pendente não abona nada.
+nunca vira hora extra, que pendente não abona nada, e que declaração de
+comparecimento justifica sem abonar.
 
 ---
 
@@ -161,7 +162,15 @@ O painel do RH tem uma aba de **atestados**, que trata dias inteiros e horas:
   aguardando conferência;
 - o fundamento legal de cada natureza fica visível na própria tela.
 
-Regra central: **um atestado aceito abona exatamente o que faltou** para fechar
-a jornada prevista, nunca mais que isso. Atestado não vira hora extra. Pendente
-não abona; recusado fica no histórico com o motivo. Detalhes em
-[`docs/LEGISLACAO.md`](docs/LEGISLACAO.md) § 3.10.
+Duas regras centrais:
+
+- **justificar não é abonar.** Atestado médico (incapacidade) abona — não pode
+  descontar. Declaração de comparecimento (consulta de rotina) justifica a
+  ausência, mas não obriga o abono, salvo nas hipóteses do art. 473 da CLT, em
+  previsão de convenção coletiva, ou quando já for prática da empresa. O efeito
+  padrão de cada natureza vem da lei; sobrepor exige motivo escrito.
+- **um atestado aceito cobre exatamente o que faltou** para fechar a jornada
+  prevista, nunca mais que isso. Atestado não vira hora extra. Pendente não
+  abona; recusado fica no histórico com o motivo.
+
+Detalhes em [`docs/LEGISLACAO.md`](docs/LEGISLACAO.md) § 3.10.

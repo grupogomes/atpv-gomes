@@ -152,3 +152,5 @@ button.perigo { border-color: var(--erro); color: var(--erro); }
 .selo.aceito::before   { background: var(--st-bom); }
 .selo.pendente::before { background: var(--st-atencao); }
 .selo.recusado::before { background: var(--st-critico); }
+.selo.abona::before     { background: var(--st-bom); }
+.selo.justifica::before { background: var(--st-atencao); }

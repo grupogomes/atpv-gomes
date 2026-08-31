@@ -67,6 +67,12 @@ export const config = {
     scoreMinimo: Number(process.env.BIOMETRIA_SCORE_MINIMO || 60)
   },
 
+  // A declaracao de comparecimento (consulta/exame do proprio trabalhador) nao
+  // obriga o abono pela lei. Marque true apenas se a convencao coletiva da
+  // categoria, o regulamento interno ou a pratica ja consolidada da empresa
+  // previrem o abono — nesse caso ele passa a ser devido.
+  abonarConsulta: process.env.ABONA_CONSULTA === 'true',
+
   // Intervalo minimo, em segundos, entre duas marcacoes do MESMO trabalhador.
   // Serve apenas para descartar duplo toque acidental no leitor; NAO restringe
   // horario de marcacao (vedado pela Portaria MTP 671/2021).
