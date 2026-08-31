@@ -1,1 +1,12 @@
 * text=auto eol=lf
+
+# Arquivos executados pelo Windows PRECISAM de quebra de linha CRLF.
+# Um .bat com quebra de linha do Unix falha de formas silenciosas e confusas
+# (goto que nao acha o rotulo, ultima linha ignorada). Nao remova estas linhas.
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# O SDK do leitor biometrico e binario proprietario.
+*.dll  binary
+*.exe  binary
