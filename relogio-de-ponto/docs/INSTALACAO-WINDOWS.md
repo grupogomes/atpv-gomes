@@ -78,6 +78,75 @@ dentro dessa pasta.
 administrador** para quem opera o quiosque. Teclado e mouse são dispensáveis —
 a tela tem dois botões.
 
+## Como o RH acessa o painel
+
+O servidor roda no PC do ponto. O RH abre o painel **do próprio computador**,
+pela rede da empresa — não precisa de nada instalado no computador do RH, só
+navegador.
+
+**1. Descubra o IP do PC do ponto.** Nele, no PowerShell:
+
+```powershell
+ipconfig | Select-String 'IPv4'
+```
+
+Anote o número (algo como `192.168.0.15`).
+
+**2. Libere a porta no firewall**, só para a rede privada:
+
+```powershell
+New-NetFirewallRule -DisplayName "Relogio de Ponto" -Direction Inbound `
+  -LocalPort 3000 -Protocol TCP -Action Allow -Profile Private
+```
+
+**3. No computador do RH**, abra no navegador:
+
+```
+http://192.168.0.15:3000/admin/
+```
+
+Troque pelo IP que você anotou. Salve nos favoritos.
+
+> **Fixe o IP do PC do ponto**, senão ele muda sozinho e o atalho quebra. O
+> jeito certo é reservar o IP no roteador (reserva de DHCP pelo endereço MAC).
+> Dá para fixar no Windows também, mas pela reserva no roteador é mais seguro
+> — evita conflito com outro aparelho.
+
+Isso vale **dentro da empresa**. De casa, não: a porta não deve ser exposta à
+internet. Para acesso de fora existem dois caminhos, e o segundo é o melhor:
+
+- **VPN** — o RH entra na rede da empresa e acessa como se estivesse lá;
+- **espelhar para um servidor na nuvem** — o registro de ponto continua
+  acontecendo aqui, local, e uma cópia sobe para a VPS só para consulta. É a
+  arquitetura recomendada; ver abaixo.
+
+## Levar para a nuvem depois
+
+Quando quiser acessar de qualquer lugar, **não mova o registro de ponto para a
+nuvem — espelhe.** A razão é dupla:
+
+1. **O leitor é USB.** A digital só pode ser lida na máquina onde ele está
+   plugado. A nuvem nunca vai ler dedo de ninguém.
+2. **A marcação não pode depender da internet.** Se a conexão cair e o sistema
+   estiver na nuvem, ninguém bate o ponto. Local, o ponto continua funcionando
+   com a internet fora do ar.
+
+Então o desenho certo é:
+
+```
+PC do ponto (fonte da verdade)        VPS (só leitura)
+  leitor USB + agente                   painel do RH de qualquer lugar
+  servidor REP-P                        cópia de segurança
+  banco, AFD, AEJ          ──sobe──>    consulta e espelho
+```
+
+O que sobe é uma cópia; o original imutável fica aqui. Assim as três barreiras
+antifraude (rede da empresa, posto autorizado, biometria) continuam inteiras, e
+o RH ganha o acesso remoto.
+
+Isso ainda não está implementado — é o passo seguinte, depois que a operação
+local estiver rodando.
+
 ## Terminais em outros computadores
 
 Se o quiosque roda em máquina diferente do servidor, troque `localhost` pelo IP
