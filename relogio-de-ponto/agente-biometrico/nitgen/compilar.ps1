@@ -18,10 +18,16 @@ Write-Host "  Compilando o agente biometrico NITGEN" -ForegroundColor White
 Write-Host ""
 
 # --- compilador ------------------------------------------------------------
-$csc = Get-ChildItem "$env:WINDIR\Microsoft.NET\Framework64\v4.0.*\csc.exe" -ErrorAction SilentlyContinue |
+# A NITGEN.SDK.NBioBSP.dll e um assembly de 32 BITS (verificado no cabecalho
+# PE: machine 0x14c, sinalizador 32BIT_MACHINE ligado), e a NBioBSP.dll
+# nativa tambem. Um executavel de 64 bits nao carrega nenhuma das duas: o
+# .NET recusa com BadImageFormatException, cujo texto ("nao e um programa
+# Win32 valido") nao diz nada sobre a causa. Por isso compilamos para x86,
+# preferindo o csc de 32 bits.
+$csc = Get-ChildItem "$env:WINDIR\Microsoft.NET\Framework\v4.0.*\csc.exe" -ErrorAction SilentlyContinue |
        Select-Object -Last 1
 if (-not $csc) {
-    $csc = Get-ChildItem "$env:WINDIR\Microsoft.NET\Framework\v4.0.*\csc.exe" -ErrorAction SilentlyContinue |
+    $csc = Get-ChildItem "$env:WINDIR\Microsoft.NET\Framework64\v4.0.*\csc.exe" -ErrorAction SilentlyContinue |
            Select-Object -Last 1
 }
 if (-not $csc) {
@@ -54,6 +60,15 @@ if (-not $dll) {
     Write-Host "    http://www.nitgen.com.br/download/eNBSP_SDK_v4.85.zip" -ForegroundColor White
     Write-Host ""
     Write-Host "  Depois copie a NITGEN.SDK.NBioBSP.dll para esta pasta e rode de novo."
+    Write-Host ""
+    Write-Host "  Se o site da Nitgen nao abrir, a Fingertech (distribuidora no" -ForegroundColor White
+    Write-Host "  Brasil) publica a mesma DLL num exemplo aberto:" -ForegroundColor White
+    Write-Host "    https://github.com/FingerTechBR/Sample_export_crud" -ForegroundColor Gray
+    Write-Host "    arquivo: FpToExportImage/bin/Debug/NITGEN.SDK.NBioBSP.dll" -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "  Atencao: essa e apenas a casca .NET. A NBioBSP.dll nativa vem" -ForegroundColor White
+    Write-Host "  com o driver/SDK e pode ja estar na maquina se outro sistema" -ForegroundColor White
+    Write-Host "  usa o leitor - rode o VERIFICAR-LEITOR.bat para saber." -ForegroundColor White
     exit 1
 }
 Ok "SDK: $dll"
@@ -75,6 +90,7 @@ $saida = Join-Path $aqui 'agente-nitgen.exe'
 $argumentos = @(
     '/nologo',
     '/target:exe',
+    '/platform:x86',            # obrigatorio: o SDK da NITGEN e 32 bits
     "/out:$saida",
     '/reference:System.dll',
     '/reference:System.Web.Extensions.dll',

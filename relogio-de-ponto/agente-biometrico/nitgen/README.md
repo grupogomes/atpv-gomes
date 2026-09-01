@@ -28,9 +28,38 @@ vice-versa. O verificador mostra quem está segurando o aparelho.
 Se os dois precisarem conviver, as saídas são um segundo leitor, ou fechar um
 enquanto se usa o outro. Não há como contornar isso por software.
 
-## 1. Baixar e instalar o SDK
+## 1. Obter o SDK
 
-<http://www.nitgen.com.br/download/eNBSP_SDK_v4.85.zip>
+São **dois** arquivos, com papéis diferentes:
+
+| Arquivo | O que é | Onde costuma estar |
+|---|---|---|
+| `NBioBSP.dll` | O motor, nativo | Vem com o driver/SDK. Qualquer sistema que use o leitor tem este |
+| `NITGEN.SDK.NBioBSP.dll` | A casca para .NET, usada pelo agente | Só no eNBSP SDK |
+
+**Os dois são de 32 bits.** É por isso que o `compilar.ps1` passa
+`/platform:x86` — um executável de 64 bits recusa as duas DLLs com
+`BadImageFormatException`, e a mensagem não explica a causa.
+
+### Onde baixar
+
+1. Site da Nitgen Brasil:
+   <http://www.nitgen.com.br/download/eNBSP_SDK_v4.85.zip>
+   (pode estar fora do ar)
+
+2. **Fingertech**, distribuidora no Brasil — página de SDKs para
+   desenvolvedores: <http://suporte.fingertech.com.br/devs-download-sdk/>.
+   Como vendem o leitor, fornecem o SDK a quem comprou.
+
+3. A própria Fingertech publica a casca .NET num exemplo aberto:
+   <https://github.com/FingerTechBR/Sample_export_crud> —
+   arquivo `FpToExportImage/bin/Debug/NITGEN.SDK.NBioBSP.dll`.
+   Isso resolve metade do problema; a `NBioBSP.dll` nativa continua
+   vindo do driver.
+
+4. Quem instalou o outro sistema que usa o leitor nesta empresa.
+
+O `VERIFICAR-LEITOR.bat` diz quais dessas DLLs já estão na máquina.
 
 Instale e plugue o leitor. O Windows precisa reconhecê-lo antes de qualquer
 outra coisa — confira no Gerenciador de Dispositivos.
