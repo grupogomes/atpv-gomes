@@ -16,7 +16,9 @@ export function empregadorAtual() {
 export function registrarEmpregador(dados, ator = 'sistema', ip = '') {
   const atual = empregadorAtual();
   const novo = {
-    tipoIdentificador: Number(dados.tipoIdentificador ?? dados.tipo_identificador ?? 1),
+    // O tipo e coluna NOT NULL. Se vier vazio ou torto, cai em 1 (CNPJ) em
+    // vez de derrubar a instalacao com um erro de constraint do SQLite.
+    tipoIdentificador: Number(dados.tipoIdentificador ?? dados.tipo_identificador) || 1,
     documento: String(dados.documento || '').replace(/\D/g, ''),
     cnoCaepf: String(dados.cnoCaepf ?? dados.cno_caepf ?? '').replace(/\D/g, ''),
     razaoSocial: String(dados.razaoSocial ?? dados.razao_social ?? '').trim(),

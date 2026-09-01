@@ -1,0 +1,53 @@
+RELOGIO DE PONTO - Grupo Gomes
+==============================
+
+COMO INSTALAR
+
+  1. Clique duas vezes em  INSTALAR.bat
+  2. Clique em SIM quando o Windows pedir permissao
+  3. Responda o que ele perguntar (CNPJ, razao social, seu login e senha)
+
+  Todos os componentes ja vem prontos aqui dentro. Nao ha nada para baixar
+  nem compilar.
+
+  A unica coisa que precisa existir na maquina e o Node.js 22.5 ou mais novo.
+  O INSTALAR.bat procura, e se nao achar tenta instalar sozinho. Se ele disser
+  que nao conseguiu, instale a mao pelo https://nodejs.org (o botao verde da
+  esquerda, LTS), avance em tudo sem mudar nada, e clique de novo no
+  INSTALAR.bat.
+
+COMO USAR NO DIA A DIA
+
+  Clique duas vezes em  INICIAR.bat
+
+  Terminal de ponto ...  http://localhost:3000/kiosk/
+  Administracao ......   http://localhost:3000/admin/
+
+ANOTE E GUARDE
+
+  - O TOKEN DO POSTO que aparece no fim da instalacao. Ele so aparece
+    uma vez. Sem ele o terminal nao registra ponto.
+  - Uma copia do arquivo .env, guardada FORA do backup do banco de dados.
+    Sem ele, as digitais cadastradas nao voltam a funcionar.
+
+BACKUP
+
+  Abra o PowerShell nesta pasta e rode:
+
+    npm run backup -- D:\backup 180
+
+  Cria uma copia em D:\backup e apaga as com mais de 180 dias.
+  Nao copie o arquivo do banco na mao: pode sair incompleto.
+
+LEITOR BIOMETRICO
+
+  O sistema comeca em MODO DE TESTE, sem leitor: no lugar da digital voce
+  digita uma palavra. Da para conferir tudo assim.
+
+  Para ligar o leitor Hamster DX, veja:  agente-biometrico\nitgen\README.md
+
+ANTES DE VALER PARA A FISCALIZACAO
+
+  Faltam tres providencias que nao sao de software - certificado
+  ICP-Brasil, registro no INPI com o ATTR, e a conferencia do leiaute
+  do AFD. Veja:  docs\HOMOLOGACAO.md

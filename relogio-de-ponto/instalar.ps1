@@ -49,6 +49,15 @@ $nodeEmbutido = Join-Path $raiz 'node.exe'
 $modoOffline = Test-Path $nodeEmbutido
 $node = if ($modoOffline) { $nodeEmbutido } else { 'node' }
 
+# O INSTALAR.bat ja procurou o node.exe em varios lugares (PATH, registro do
+# instalador, pastas conhecidas, nvm) e passa o caminho encontrado aqui. Nao
+# repetimos a busca: aproveitamos, e ainda colocamos a pasta dele no PATH
+# deste processo para que 'npm' tambem seja encontrado.
+if (-not $modoOffline -and $env:NODE_EXE_PARA_PS -and (Test-Path $env:NODE_EXE_PARA_PS)) {
+    $node = $env:NODE_EXE_PARA_PS
+    $env:Path = (Split-Path -Parent $node) + ';' + $env:Path
+}
+
 # ---------------------------------------------------------------------------
 Titulo "1. Requisitos"
 
@@ -91,11 +100,24 @@ if ($modoOffline) {
     Ok "Node.js $versao"
 }
 
-if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
+# O npm mora na mesma pasta do node.exe. So e realmente necessario quando o
+# pacote vem sem a pasta node_modules; num pacote fechado ele nao faz falta.
+$npm = $null
+$npmAoLado = Join-Path (Split-Path -Parent $node) 'npm.cmd'
+if (Test-Path $npmAoLado) {
+    $npm = $npmAoLado
+} elseif (Get-Command npm -ErrorAction SilentlyContinue) {
+    $npm = (Get-Command npm).Source
+}
+$precisaDeNpm = -not (Test-Path (Join-Path $raiz 'node_modules'))
+if ($npm) {
+    Ok "npm $((& $npm --version).Trim())"
+} elseif ($precisaDeNpm) {
     Erro "npm nao encontrado (deveria vir junto com o Node)."
     exit 1
+} else {
+    Aviso "npm nao encontrado - nao faz falta: os componentes ja vem no pacote."
 }
-Ok "npm $(& npm --version)"
 
 # ---------------------------------------------------------------------------
 Titulo "2. Dependencias"
@@ -104,7 +126,7 @@ if (Test-Path (Join-Path $raiz 'node_modules')) {
     Ok "node_modules ja existe - pulando (apague a pasta para reinstalar)"
 } else {
     Write-Host "  Baixando... (leva um ou dois minutos)"
-    & npm install --omit=dev --no-audit --no-fund
+    & $npm install --omit=dev --no-audit --no-fund
     if ($LASTEXITCODE -ne 0) {
         Erro "npm install falhou."
         Write-Host ""
@@ -216,7 +238,7 @@ Titulo "6. Iniciar junto com o Windows"
 
 $r = Perguntar "  Criar a tarefa que sobe o sistema ao ligar o PC? (S/n)" "S"
 if ($r.ToLower() -ne 'n') {
-    $nodeExe = if ($modoOffline) { $nodeEmbutido } else { (Get-Command node).Source }
+    $nodeExe = if ($node -eq 'node') { (Get-Command node).Source } else { $node }
     $acao   = New-ScheduledTaskAction -Execute $nodeExe -Argument 'src\index.js' -WorkingDirectory $raiz
     $gatilho = New-ScheduledTaskTrigger -AtStartup
     $config  = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries `

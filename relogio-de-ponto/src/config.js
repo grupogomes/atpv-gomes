@@ -15,8 +15,35 @@ function carregarEnv(arquivo) {
     if (igual < 1) continue;
     const chave = limpa.slice(0, igual).trim();
     if (process.env[chave] !== undefined) continue;
-    process.env[chave] = limpa.slice(igual + 1).trim();
+    process.env[chave] = valorDaLinha(limpa.slice(igual + 1));
   }
+}
+
+/**
+ * Interpreta o lado direito do "=".
+ *
+ * Entre aspas, o valor sai literal — e como se escreve uma senha que tenha
+ * "#" ou espaco nas pontas. Fora das aspas, um "#" precedido de espaco abre
+ * comentario e o resto da linha e descartado. Sem essa regra, um comentario
+ * na mesma linha entrava no valor: EMPREGADOR_TIPO_ID virava a frase inteira,
+ * Number() dava NaN e o banco recusava com "NOT NULL constraint failed".
+ */
+export function valorDaLinha(bruto) {
+  const texto = bruto.trim();
+  const aspas = texto[0];
+  if ((aspas === '"' || aspas === "'") && texto.length > 1) {
+    const fim = texto.indexOf(aspas, 1);
+    if (fim > 0) return texto.slice(1, fim);
+  }
+  return bruto.replace(/(^|\s)#.*$/, '$1').trim();
+}
+
+/** Numero de configuracao, com valor de reserva quando vier vazio ou torto. */
+export function numero(bruto, reserva) {
+  const texto = String(bruto ?? '').trim();
+  if (texto === '') return reserva;   // Number('') e 0, e 0 aqui nao serve
+  const n = Number(texto);
+  return Number.isFinite(n) ? n : reserva;
 }
 
 carregarEnv(path.resolve(process.cwd(), '.env'));
@@ -35,13 +62,13 @@ function segredo(chave) {
 
 export const config = {
   desenvolvimento,
-  porta: Number(process.env.PORTA || 3000),
+  porta: numero(process.env.PORTA, 3000),
   host: process.env.HOST || '0.0.0.0',
   banco: path.resolve(process.env.BANCO || './dados/ponto.db'),
   fuso: process.env.FUSO || '-03:00',
 
   empregador: {
-    tipoIdentificador: Number(process.env.EMPREGADOR_TIPO_ID || 1), // 1=CNPJ 2=CPF
+    tipoIdentificador: numero(process.env.EMPREGADOR_TIPO_ID, 1), // 1=CNPJ 2=CPF
     documento: (process.env.EMPREGADOR_DOCUMENTO || '').replace(/\D/g, ''),
     razaoSocial: process.env.EMPREGADOR_RAZAO_SOCIAL || '',
     cnoCaepf: (process.env.EMPREGADOR_CNO_CAEPF || '').replace(/\D/g, ''),
@@ -64,7 +91,7 @@ export const config = {
     driver: process.env.BIOMETRIA_DRIVER || 'simulador',
     agenteUrl: process.env.BIOMETRIA_AGENTE_URL || 'http://127.0.0.1:9010',
     // Score minimo (0-100) para aceitar uma identificacao 1:N.
-    scoreMinimo: Number(process.env.BIOMETRIA_SCORE_MINIMO || 60)
+    scoreMinimo: numero(process.env.BIOMETRIA_SCORE_MINIMO, 60)
   },
 
   // A declaracao de comparecimento (consulta/exame do proprio trabalhador) nao
@@ -76,5 +103,5 @@ export const config = {
   // Intervalo minimo, em segundos, entre duas marcacoes do MESMO trabalhador.
   // Serve apenas para descartar duplo toque acidental no leitor; NAO restringe
   // horario de marcacao (vedado pela Portaria MTP 671/2021).
-  janelaAntiDuplicidadeSegundos: Number(process.env.JANELA_ANTIDUPLICIDADE || 60)
+  janelaAntiDuplicidadeSegundos: numero(process.env.JANELA_ANTIDUPLICIDADE, 60)
 };

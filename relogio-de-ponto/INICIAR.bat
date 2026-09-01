@@ -7,7 +7,28 @@ REM ===========================================================================
 title Relogio de Ponto - EM FUNCIONAMENTO
 cd /d "%~dp0"
 
-if exist "%~dp0node.exe" ( set "NODEEXE=%~dp0node.exe" ) else ( set "NODEEXE=node" )
+REM --- acha o node.exe -----------------------------------------------------
+REM  Nao mexemos no PATH. Usamos, em ordem: o node embutido no pacote, o
+REM  caminho que o INSTALAR.bat anotou, o PATH da maquina, e por fim as
+REM  pastas onde o Node.js costuma ser instalado.
+set "NODEEXE="
+if exist "%~dp0node.exe" set "NODEEXE=%~dp0node.exe"
+if not defined NODEEXE if exist "%~dp0node-encontrado.txt" (
+    for /f "usebackq delims=" %%c in ("%~dp0node-encontrado.txt") do if exist "%%c" set "NODEEXE=%%c"
+)
+if not defined NODEEXE for /f "delims=" %%p in ('where node 2^>nul') do if not defined NODEEXE set "NODEEXE=%%p"
+if not defined NODEEXE if exist "%ProgramFiles%\nodejs\node.exe" set "NODEEXE=%ProgramFiles%\nodejs\node.exe"
+if not defined NODEEXE if exist "%ProgramFiles(x86)%\nodejs\node.exe" set "NODEEXE=%ProgramFiles(x86)%\nodejs\node.exe"
+if not defined NODEEXE if exist "%LOCALAPPDATA%\Programs\nodejs\node.exe" set "NODEEXE=%LOCALAPPDATA%\Programs\nodejs\node.exe"
+
+if not defined NODEEXE (
+    echo.
+    echo   O Node.js nao foi encontrado nesta maquina.
+    echo   Clique duas vezes em INSTALAR.bat primeiro.
+    echo.
+    pause
+    exit /b 1
+)
 
 if not exist node_modules (
     echo.
