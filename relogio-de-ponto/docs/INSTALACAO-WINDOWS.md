@@ -207,101 +207,20 @@ obrigar todo mundo a usar a credencial alternativa.
 ## Backup
 
 O banco fica em `dados\ponto.db` e usa modo WAL — **copiar o arquivo com
-`copy` pode sair inconsistente**. Use o comando de backup do próprio SQLite.
-Salve como `backup.ps1` e agende no Agendador de Tarefas:
+`copy` pode sair inconsistente**, porque parte dos dados fica num arquivo
+separado. Use o comando do proprio sistema:
 
 ```powershell
-$data = Get-Date -Format 'yyyyMMdd'
-$destino = "D:\backup\ponto-$data.db"
-node -e "const D=require('better-sqlite3'); const d=new D('./dados/ponto.db'); d.backup(process.argv[1]).then(()=>{console.log('ok');process.exit(0)})" $destino
-Get-ChildItem D:\backup\ponto-*.db | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-180) } | Remove-Item
+npm run backup -- D:\backup 180
 ```
 
-Guarde uma cópia do **`.env` em local separado do backup do banco**. Backup com
+Cria `D:\backup\ponto-AAAAMMDD.db` e apaga as copias com mais de 180 dias.
+Agende no Agendador de Tarefas para rodar todo dia.
+
+Guarde uma copia do **`.env` em local separado do backup do banco**. Backup com
 a chave junto anula a cifragem das biometrias; `.env` perdido significa
-biometrias irrecuperáveis (as marcações continuam legíveis).
+biometrias irrecuperaveis (as marcacoes continuam legiveis).
 
----
-
-## Onde cada peça precisa morar
-
-O leitor biométrico é USB. Isso decide o resto:
-
-- **O agente biométrico roda obrigatoriamente no PC onde o leitor está
-  plugado.** Não tem escapatória: o SDK do fabricante fala com o USB daquela
-  máquina.
-- **O servidor pode rodar em qualquer máquina da rede** — inclusive na mesma.
-
-Para uma empresa pequena, a recomendação é **uma máquina só**: servidor,
-agente e quiosque no computador da entrada, onde o leitor está. Menos peça,
-menos ponto de falha, e o ponto continua funcionando mesmo que a rede caia. O
-RH acessa `/admin/` do próprio computador, pela rede local.
-
-Só separe o servidor se o PC da entrada for fraco, se houver mais de um
-terminal, ou se aquele PC for desligado no fim do dia.
-
-## Testar sem o leitor biométrico
-
-Dá para conferir o sistema inteiro — cadastro, marcação, comprovante, espelho,
-AFD — num computador que ainda não tem o leitor plugado. O instalador já deixa
-`BIOMETRIA_DRIVER=simulador` por padrão, que é o modo de teste.
-
-No lugar da digital, cada pessoa recebe uma **senha de dedo**: qualquer
-palavra. A mesma palavra sempre identifica a mesma pessoa.
-
-1. No painel, aba **Pessoas** → *Cadastrar digital*. Ele pergunta a senha de
-   dedo — use o primeiro nome da pessoa, por exemplo.
-2. No quiosque aparece uma tarja amarela **MODO DE TESTE** com um campo. Digite
-   a mesma palavra e clique em *Registrar ponto*.
-
-Palavra errada é recusada como digital não reconhecida, igual ao leitor real.
-
-> Quando o leitor de verdade entrar (`BIOMETRIA_DRIVER=agente`), a tarja some
-> sozinha e a rota que injeta a identidade deixa de existir — responde 404. Não
-> há caminho para forjar identidade num sistema em produção.
-
-O painel de **Saúde** acusa o modo simulador em vermelho enquanto ele estiver
-ligado. Não coloque ninguém para bater ponto de verdade assim.
-
-## Testar numa máquina e mover para outra
-
-Testar antes num computador e depois levar para o definitivo é o caminho certo.
-Três cuidados:
-
-**1. Não leve o banco de teste.** Vá para produção com banco limpo — as
-marcações de teste ficariam misturadas com as reais no AFD, e o AFD é imutável.
-Apague `dados\ponto.db` na máquina definitiva antes de começar, ou simplesmente
-não copie a pasta `dados\`.
-
-**2. Não copie `node_modules`.** O `better-sqlite3` tem binário nativo compilado
-para aquela máquina. Rode `npm install` no destino.
-
-**3. Decida sobre as chaves.** O jeito mais limpo é clonar o projeto de novo no
-computador definitivo e rodar o `instalar.ps1` lá, gerando chaves novas. As
-biometrias do teste param de funcionar — o que é justamente o esperado, já que
-elas eram de teste.
-
-Resumindo, no computador definitivo:
-
-```powershell
-git clone https://github.com/grupogomes/atpv-gomes
-cd atpv-gomes\relogio-de-ponto
-git checkout claude/biometric-time-clock-41yx0w
-powershell -ExecutionPolicy Bypass -File instalar.ps1
-npm run seed
-```
-
-E provisione um posto novo para aquela máquina — o token do posto de teste não
-vale mais nada lá:
-
-```powershell
-npm run posto -- RECEPCAO-01 "Recepção - terminal 1"
-```
-
-> **Depois que entrar em produção, nunca mais gere `CHAVE_BIOMETRIA` nova.**
-> Ela é o que decifra os templates cadastrados. Perdê-la significa recadastrar
-> a digital de todo mundo. As marcações continuam legíveis — elas não são
-> cifradas — mas as biometrias, não.
 
 ---
 
@@ -309,8 +228,8 @@ npm run posto -- RECEPCAO-01 "Recepção - terminal 1"
 
 | Sintoma | O que é |
 |---|---|
-| `npm install` falha em `better-sqlite3` com **"No prebuilt binaries found"** | é a **versão do Node**, não falta de ferramenta. O `better-sqlite3` só traz binário pronto para algumas versões e tentou compilar. Instale o Node 22 LTS: `winget install OpenJS.NodeJS --version 22.20.0`, feche e reabra o terminal, apague `node_modules` e rode de novo |
-| `npm install` falha em `better-sqlite3` **sem** aquela linha | aí sim faltam as ferramentas de build: `winget install Microsoft.VisualStudio.2022.BuildTools`, marcando "Desenvolvimento para desktop com C++" |
+| `npm install` falha | o sistema não tem nenhum componente que precise ser compilado, então quase sempre é internet ou proxy. **Se você usou o pacote pronto, esta etapa nem roda** |
+| Pede Node 22.5 ou superior | o banco de dados é o SQLite embutido no Node, disponível a partir dessa versão: `winget upgrade OpenJS.NodeJS.LTS` |
 | `node não é reconhecido` | feche e reabra o PowerShell depois de instalar o Node |
 | `Este equipamento não está autorizado` | token do posto perdido (dados do navegador limpos) ou posto desativado — reemita com `npm run posto` |
 | `Marcação só é aceita nos terminais da empresa` | o IP de origem está fora de `REDES_AUTORIZADAS` |

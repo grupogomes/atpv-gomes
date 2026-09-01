@@ -80,18 +80,13 @@ if ($modoOffline) {
 
     $versao = (& $node --version).TrimStart('v')
     $maior = [int]($versao.Split('.')[0])
-    if ($maior -lt 20) {
-        Erro "Node.js $versao e antigo demais. O sistema exige 20 ou superior."
+    # 22.5 e a versao em que o Node passou a trazer SQLite embutido. Como o
+    # sistema nao usa mais modulo nativo, e o unico requisito que resta.
+    $menor = [int]($versao.Split('.')[1])
+    if ($maior -lt 22 -or ($maior -eq 22 -and $menor -lt 5)) {
+        Erro "Node.js $versao e antigo demais. O sistema exige 22.5 ou superior."
         Write-Host "  Atualize com:  winget upgrade OpenJS.NodeJS.LTS"
         exit 1
-    }
-    # O better-sqlite3 traz binario pronto so para algumas versoes do Node.
-    # Fora dessas, o npm tenta COMPILAR — e ai precisa de Python e compilador C++.
-    $suportadas = @(20, 22, 23, 24, 25, 26)
-    if ($suportadas -notcontains $maior) {
-        Aviso "Node.js $versao e mais novo que as versoes com binario pronto do better-sqlite3."
-        Write-Host "     Se o passo 2 falhar, instale o Node 22 LTS:" -ForegroundColor White
-        Write-Host "       winget install OpenJS.NodeJS --version 22.20.0" -ForegroundColor Gray
     }
     Ok "Node.js $versao"
 }
@@ -113,17 +108,9 @@ if (Test-Path (Join-Path $raiz 'node_modules')) {
     if ($LASTEXITCODE -ne 0) {
         Erro "npm install falhou."
         Write-Host ""
-        Write-Host "  Procure no texto acima a linha 'No prebuilt binaries found'." -ForegroundColor White
-        Write-Host ""
-        Write-Host "  SE ELA APARECER, a causa e a versao do Node — nao faltam ferramentas" -ForegroundColor White
-        Write-Host "  de compilacao. O better-sqlite3 nao tem binario pronto para essa" -ForegroundColor White
-        Write-Host "  versao e tentou compilar. Instale o Node 22 LTS:" -ForegroundColor White
-        Write-Host "    winget install OpenJS.NodeJS --version 22.20.0" -ForegroundColor Gray
-        Write-Host "  Feche e reabra o terminal, apague a pasta node_modules e rode de novo." -ForegroundColor Gray
-        Write-Host ""
-        Write-Host "  SE NAO APARECER, ai sim faltam as ferramentas de compilacao:" -ForegroundColor White
-        Write-Host "    winget install Microsoft.VisualStudio.2022.BuildTools" -ForegroundColor Gray
-        Write-Host "  (marque 'Desenvolvimento para desktop com C++' na instalacao)" -ForegroundColor DarkGray
+        Write-Host "  O sistema nao tem nenhum componente que precise ser compilado," -ForegroundColor White
+        Write-Host "  entao a causa quase sempre e conexao com a internet ou proxy." -ForegroundColor White
+        Write-Host "  Verifique a conexao e tente de novo." -ForegroundColor White
         exit 1
     }
     Ok "dependencias instaladas"

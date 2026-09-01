@@ -143,6 +143,21 @@ Detalhes em [`docs/HOMOLOGACAO.md`](docs/HOMOLOGACAO.md).
 
 ---
 
+## Sem dependências nativas
+
+O banco de dados é o **SQLite embutido no próprio Node.js** (`node:sqlite`, a
+partir do Node 22.5). Isso não é detalhe de implementação — é o que faz a
+instalação funcionar numa máquina de escritório comum.
+
+A versão anterior usava `better-sqlite3`, um módulo nativo que exige binário
+compilado para cada combinação de sistema, arquitetura e versão do Node. Na
+instalação real, numa máquina com Node 24, não havia binário pronto: o npm
+tentou compilar e foi procurar Python e compilador C++. Um relógio de ponto
+para quatro pessoas não pode depender disso.
+
+Hoje as únicas dependências são `express` e `pdfkit`, ambas JavaScript puro.
+**Nada para compilar, em máquina nenhuma.**
+
 ## Testes
 
 ```bash

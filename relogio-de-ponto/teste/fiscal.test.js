@@ -62,10 +62,22 @@ test('o trailer conta corretamente as marcacoes do periodo', () => {
     fim: new Date('2026-08-31T23:59:59-03:00')
   });
   assert.equal(afd.contagem[7], 5);
-  assert.equal(afd.contagem[5], 2); // duas inclusoes de empregado
   const trailer = afd.conteudo.split('\r\n').filter(Boolean).at(-1);
   // qtdTipo7 e o 6º campo de 9 posicoes depois de nsr(9)+tipo(1).
   assert.equal(trailer.slice(10 + 5 * 9, 10 + 6 * 9), '000000005');
+});
+
+test('o trailer conta as inclusoes de empregado', () => {
+  // As inclusoes de empregado sao gravadas com a data de HOJE, entao a janela
+  // precisa alcancar o presente. Fixar so o mes de agosto fazia este teste
+  // falhar sozinho quando a data virava o mes.
+  const afd = gerarAfd({
+    inicio: new Date('2026-01-01T00:00:00-03:00'),
+    fim: new Date('2036-12-31T23:59:59-03:00')
+  });
+  assert.equal(afd.contagem[5], 2); // duas inclusoes de empregado
+  const trailer = afd.conteudo.split('\r\n').filter(Boolean).at(-1);
+  assert.equal(trailer.slice(10 + 3 * 9, 10 + 4 * 9), '000000002');
 });
 
 test('os verificadores do AFD conferem em todas as linhas', () => {

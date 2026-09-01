@@ -38,14 +38,19 @@ npm install
 npm run migrar        # cria o banco e registra o empregador a partir do .env
 npm run seed          # primeiro administrador e primeiro posto (interativo)
 npm start             # sobe o servidor
-npm run teste         # 73 testes
+npm run teste         # 77 testes
 npm run posto -- ID "Nome"   # provisiona um terminal
 npm run afd -- 2026-08-01 2026-08-31
 npm run aej -- 2026-08-01 2026-08-31
 ```
 
-Stack: Node.js 20+, ESM puro sem passo de build, Express, better-sqlite3,
-pdfkit. Front em HTML/CSS/JS sem framework nem CDN (a CSP é fechada).
+Stack: Node.js 22.5+, ESM puro sem passo de build, Express e pdfkit. Front em
+HTML/CSS/JS sem framework nem CDN (a CSP é fechada).
+
+**Zero dependências nativas, e isso é requisito, não acaso.** O banco é o
+`node:sqlite` embutido, obtido por `process.getBuiltinModule` (sem flag de
+linha de comando). Não reintroduza módulo nativo: a instalação em máquina de
+escritório quebra quando falta binário pronto para a versão do Node.
 
 ## Testar sem o leitor
 

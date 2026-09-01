@@ -2,11 +2,6 @@
 REM ===========================================================================
 REM  Instalador do Relogio de Ponto - clique duas vezes neste arquivo.
 REM
-REM  Funciona de dois jeitos:
-REM   - PACOTE FECHADO: se existir um node.exe nesta pasta, usa ele. Nao baixa
-REM     nada, nao instala nada, funciona sem internet.
-REM   - PROJETO: sem node.exe, instala o Node e baixa as dependencias.
-REM
 REM  As mensagens sao escritas SEM ACENTO de proposito: o console do Windows
 REM  troca a tabela de caracteres conforme a maquina e acento vira lixo na tela.
 REM ===========================================================================
@@ -41,60 +36,29 @@ REM ===========================================================================
 echo   [1/4] Verificando o Node.js...
 REM ===========================================================================
 
-set "NODEEXE=node"
-set "OFFLINE=0"
-if exist "%~dp0binarios" set "OFFLINE=1"
 call :atualizar_path
-
 where node >nul 2>&1
 if %errorlevel% neq 0 goto instalar_node
 
-for /f "tokens=1 delims=." %%v in ('node --version') do set "NODEMAJOR=%%v"
-set "NODEMAJOR=!NODEMAJOR:v=!"
-
-if "!OFFLINE!"=="1" (
-    REM Pacote fechado: temos binario do banco para o Node 22 e para o 24.
-    set "ABIDE="
-    if "!NODEMAJOR!"=="22" set "ABIDE=127"
-    if "!NODEMAJOR!"=="24" set "ABIDE=137"
-    if "!ABIDE!"=="" (
-        echo         Node !NODEMAJOR! nao acompanha este pacote. Instalando o Node 22...
-        goto instalar_node22
-    )
-    for /f %%v in ('node --version') do echo         Node %%v encontrado. OK.
-    goto dependencias
+call :versao_node
+if "!NODEOK!"=="0" (
+    echo         Node !NODEMAIOR!.!NODEMENOR! e antigo demais. Instalando o Node 22...
+    goto instalar_node
 )
-
-REM Versoes para as quais o better-sqlite3 publica binario pronto. Fora dessa
-REM faixa o npm tenta compilar da fonte e exige Python e compilador C++.
-set "OK=0"
-for %%n in (20 22 23 24 25 26) do if "!NODEMAJOR!"=="%%n" set "OK=1"
-if "!OK!"=="0" (
-    echo         Node !NODEMAJOR! nao tem binario pronto. Instalando o Node 22...
-    goto instalar_node22
-)
-
 for /f %%v in ('node --version') do echo         Node %%v encontrado. OK.
 goto dependencias
 
 :instalar_node
-echo         Node.js nao encontrado. Instalando...
+echo         Instalando o Node.js...
 where winget >nul 2>&1
 if %errorlevel% neq 0 goto sem_winget
-if "!OFFLINE!"=="1" goto instalar_node22
 winget install --id OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements --silent
 call :atualizar_path
 where node >nul 2>&1
 if %errorlevel% neq 0 goto sem_winget
+call :versao_node
+if "!NODEOK!"=="0" goto node_antigo
 echo         Node.js instalado.
-goto dependencias
-
-:instalar_node22
-where winget >nul 2>&1
-if %errorlevel% neq 0 goto sem_winget
-winget install --id OpenJS.NodeJS --version 22.20.0 --accept-source-agreements --accept-package-agreements --silent
-call :atualizar_path
-if "!OFFLINE!"=="1" set "ABIDE=127"
 goto dependencias
 
 :sem_winget
@@ -107,31 +71,30 @@ echo.
 pause
 exit /b 1
 
+:node_antigo
+echo.
+echo   [X] O Node.js instalado e antigo demais. O sistema precisa da
+echo       versao 22.5 ou superior, que traz o banco de dados embutido.
+echo.
+echo       Baixe a versao LTS em:  https://nodejs.org
+echo.
+pause
+exit /b 1
+
 REM ===========================================================================
 :dependencias
 echo.
 echo   [2/4] Componentes do sistema...
 REM ===========================================================================
 
-if "!OFFLINE!"=="1" (
-    echo         Ja vem prontos no pacote.
-    echo         Instalando o banco de dados para o Node !NODEMAJOR!...
-    copy /y "%~dp0binarios\better_sqlite3-abi!ABIDE!.node" ^
-            "%~dp0node_modules\better-sqlite3\build\Release\better_sqlite3.node" >nul
-    if errorlevel 1 goto erro_binario
-    echo         OK.
-    goto configurar
-)
-
 if exist node_modules (
-    echo         Ja instalados. OK.
+    echo         Ja vem prontos neste pacote. OK.
     goto configurar
 )
 
-echo         Baixando... ^(leva um ou dois minutos^)
+echo         Baixando... ^(leva menos de um minuto^)
 call npm install --omit=dev --no-audit --no-fund --loglevel=error
 if %errorlevel% neq 0 (
-    echo.
     echo         Primeira tentativa falhou. Limpando e tentando de novo...
     if exist node_modules rmdir /s /q node_modules >nul 2>&1
     if exist package-lock.json del /q package-lock.json >nul 2>&1
@@ -176,21 +139,8 @@ REM ===========================================================================
 :erro_dependencias
 echo.
 echo   [X] Nao foi possivel baixar os componentes.
-echo.
-echo       Se apareceu "No prebuilt binaries found" no texto acima, o problema
-echo       e a versao do Node - nao faltam ferramentas de compilacao. Rode:
-echo.
-echo         winget install OpenJS.NodeJS --version 22.20.0
-echo.
-echo       Feche esta janela, apague a pasta node_modules e comece de novo.
-echo.
-pause
-exit /b 1
-
-:erro_binario
-echo.
-echo   [X] Nao foi possivel instalar o banco de dados.
-echo       Confira se a pasta node_modules veio junto no pacote.
+echo       Verifique a conexao com a internet e tente de novo.
+echo       Mande o texto acima para o suporte.
 echo.
 pause
 exit /b 1
@@ -201,6 +151,21 @@ echo   [X] A configuracao nao terminou. Veja a mensagem acima.
 echo.
 pause
 exit /b 1
+
+REM ===========================================================================
+REM  Le a versao do Node e diz se serve. Precisamos de 22.5 ou superior, que
+REM  e quando o Node passou a trazer o SQLite embutido.
+REM ===========================================================================
+:versao_node
+set "NODEOK=0"
+for /f "tokens=1,2 delims=." %%a in ('node --version') do (
+    set "NODEMAIOR=%%a"
+    set "NODEMENOR=%%b"
+)
+set "NODEMAIOR=!NODEMAIOR:v=!"
+if !NODEMAIOR! gtr 22 set "NODEOK=1"
+if !NODEMAIOR! equ 22 if !NODEMENOR! geq 5 set "NODEOK=1"
+exit /b 0
 
 REM ===========================================================================
 REM  Recarrega o PATH do registro. Necessario porque um programa recem
