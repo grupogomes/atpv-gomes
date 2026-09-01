@@ -3,6 +3,31 @@
 O **Hamster DX é um leitor da NITGEN.** A Fingertech é a distribuidora no
 Brasil — o SDK que você precisa é o **eNBSP SDK da Nitgen**.
 
+## 0. Antes de tudo: veja se o SDK já não está aí
+
+Se o leitor já é usado por outro sistema nesta máquina, o SDK provavelmente já
+está instalado e não há o que baixar. Para descobrir, clique duas vezes em
+**`VERIFICAR-LEITOR.bat`**, na pasta do relógio de ponto.
+
+Ele só consulta — não instala nem altera nada — e diz quatro coisas:
+
+- se o leitor está plugado e reconhecido pelo Windows;
+- onde está a `NITGEN.SDK.NBioBSP.dll`, se estiver em algum lugar;
+- **qual outro programa está com o leitor aberto neste momento**;
+- se falta o compilador C# ou o .NET Framework 3.5.
+
+Achando o SDK, pule direto para o passo 2.
+
+### Um leitor, dois sistemas
+
+O eNBSP abre o leitor em modo exclusivo: **dois programas não conseguem usar o
+mesmo leitor ao mesmo tempo.** Se o outro sistema fica aberto o dia todo, o
+agente do ponto não vai conseguir capturar enquanto ele estiver rodando, e
+vice-versa. O verificador mostra quem está segurando o aparelho.
+
+Se os dois precisarem conviver, as saídas são um segundo leitor, ou fechar um
+enquanto se usa o outro. Não há como contornar isso por software.
+
 ## 1. Baixar e instalar o SDK
 
 <http://www.nitgen.com.br/download/eNBSP_SDK_v4.85.zip>
