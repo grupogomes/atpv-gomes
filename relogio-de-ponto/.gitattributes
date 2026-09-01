@@ -6,6 +6,7 @@
 *.bat  text eol=crlf
 *.cmd  text eol=crlf
 *.ps1  text eol=crlf
+*.vbs  text eol=crlf
 
 # O SDK do leitor biometrico e binario proprietario.
 *.dll  binary
