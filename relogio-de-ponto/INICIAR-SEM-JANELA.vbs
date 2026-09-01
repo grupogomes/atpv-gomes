@@ -54,6 +54,21 @@ If Not fso.FolderExists(pasta & "\node_modules") Or Not fso.FileExists(pasta & "
     WScript.Quit 1
 End If
 
+' --- agente do leitor biometrico -------------------------------------------
+' Quem conversa com o leitor e o agente-nitgen.exe, que so existe depois de
+' compilado. Sem ele no ar, o sistema fica em modo de teste.
+Dim agente, servico, processos
+agente = pasta & "\agente-biometrico\nitgen\agente-nitgen.exe"
+If fso.FileExists(agente) Then
+    Set servico = GetObject("winmgmts:\\.\root\cimv2")
+    Set processos = servico.ExecQuery( _
+        "SELECT * FROM Win32_Process WHERE Name = 'agente-nitgen.exe'")
+    If processos.Count = 0 Then
+        shell.Run  & agente & , 0, False
+        WScript.Sleep 1500
+    End If
+End If
+
 ' --- sobe escondido --------------------------------------------------------
 ' O 0 e o que esconde a janela. O False faz este script sair na hora, sem
 ' esperar o servidor terminar (ele fica no ar ate voce mandar parar).

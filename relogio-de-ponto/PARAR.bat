@@ -52,6 +52,18 @@ if ($processos) {
     Write-Host "  [!]  Nao estava rodando." -ForegroundColor Yellow
 }
 
+# O agente do leitor e um processo a parte: parar o servidor nao o encerra,
+# e ele continuaria segurando o leitor de vez em quando.
+$agentes = Get-Process -Name 'agente-nitgen' -ErrorAction SilentlyContinue
+if ($agentes) {
+    foreach ($a in $agentes) {
+        Stop-Process -Id $a.Id -Force
+        Write-Host "  [ok] agente do leitor desligado (processo $($a.Id))" -ForegroundColor Green
+    }
+} else {
+    Write-Host "  [!]  Agente do leitor nao estava rodando." -ForegroundColor Yellow
+}
+
 # A tarefa agendada sobe o sistema de novo ao ligar o PC. Se ela existir,
 # avisamos - senao a pessoa desliga e ele "volta sozinho" sem explicacao.
 $tarefa = Get-ScheduledTask -TaskName 'RelogioDePonto'

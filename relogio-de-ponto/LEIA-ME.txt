@@ -64,6 +64,10 @@ LEITOR BIOMETRICO
 
   Para ligar o leitor Hamster DX, veja:  agente-biometrico\nitgen\README.md
 
+  Depois de compilar o agente, o INICIAR.bat e o INICIAR-SEM-JANELA.vbs
+  passam a liga-lo sozinhos, junto com o sistema. Voce nao precisa abrir
+  o agente na mao.
+
 ANTES DE VALER PARA A FISCALIZACAO
 
   Faltam tres providencias que nao sao de software - certificado

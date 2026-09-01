@@ -64,6 +64,24 @@ echo.
 echo   ------------------------------------------------------------
 echo.
 
+REM --- agente do leitor biometrico -----------------------------------------
+REM  O leitor nao fala com o servidor direto: quem conversa com ele e o
+REM  agente-nitgen.exe, que so existe depois de compilado. Sem o agente no
+REM  ar, o sistema fica em modo de teste mesmo com o leitor plugado.
+set "AGENTE=%~dp0agente-biometrico\nitgen\agente-nitgen.exe"
+if exist "%AGENTE%" (
+    tasklist /fi "imagename eq agente-nitgen.exe" 2>nul | find /i "agente-nitgen.exe" >nul
+    if errorlevel 1 (
+        echo   Ligando o agente do leitor biometrico...
+        start "Agente biometrico" /min "%AGENTE%"
+    ) else (
+        echo   Agente do leitor biometrico ja estava ligado.
+    )
+) else (
+    echo   Agente do leitor ainda nao compilado - o sistema roda em modo de teste.
+)
+echo.
+
 start "" /b cmd /c "timeout /t 4 /nobreak >nul & start http://localhost:3000/kiosk/"
 
 "%NODEEXE%" "%~dp0src\index.js"
