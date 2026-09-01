@@ -40,6 +40,19 @@ ANOTE E GUARDE
   - Uma copia do arquivo .env, guardada FORA do backup do banco de dados.
     Sem ele, as digitais cadastradas nao voltam a funcionar.
 
+VER O PONTO DE OUTRO COMPUTADOR
+
+  Clique duas vezes em  ACESSO-PELA-REDE.bat  (pede administrador).
+
+  Ele libera a porta no Firewall e mostra o endereco para digitar no
+  navegador do outro computador, algo como:
+
+    http://192.168.0.15:3000/admin/
+
+  Isso libera CONSULTAR o painel pela rede. Nao libera bater ponto de
+  outra maquina: a lista de redes autorizadas nao e alterada, e o leitor
+  continua espetado num computador so.
+
 BACKUP
 
   Abra o PowerShell nesta pasta e rode:
