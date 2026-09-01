@@ -20,7 +20,12 @@ Write-Host "     LEITOR BIOMETRICO - O QUE JA EXISTE NESTA MAQUINA" -ForegroundC
 Write-Host "  ============================================================" -ForegroundColor White
 Write-Host "  Este script so OLHA. Nao instala nem altera nada." -ForegroundColor DarkGray
 
-$aqui = Split-Path -Parent $MyInvocation.MyCommand.Path
+# A pasta onde estamos. Quando este script roda embutido no .bat nao existe
+# MyInvocation.MyCommand.Path, entao o .bat passa o caminho por variavel.
+$aqui = $PSScriptRoot
+if (-not $aqui) { $aqui = $env:PASTA_RELOGIO }
+if (-not $aqui) { $aqui = (Get-Location).Path }
+$aqui = $aqui.TrimEnd('\')
 $temSdk = $false
 $temNativa = $false
 $temLeitor = $false
@@ -51,6 +56,7 @@ Titulo "2. O SDK da NITGEN esta instalado?"
 
 $lugares = @(
     (Join-Path $aqui 'NITGEN.SDK.NBioBSP.dll'),
+    (Join-Path $aqui 'agente-biometrico\nitgen\NITGEN.SDK.NBioBSP.dll'),
     "$env:ProgramFiles\NITGEN\eNBSP SDK\Bin\NITGEN.SDK.NBioBSP.dll",
     "${env:ProgramFiles(x86)}\NITGEN\eNBSP SDK\Bin\NITGEN.SDK.NBioBSP.dll",
     "$env:WINDIR\System32\NITGEN.SDK.NBioBSP.dll",

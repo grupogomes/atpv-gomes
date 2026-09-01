@@ -1,12 +1,68 @@
 @echo off
 REM ===========================================================================
-REM  Desliga o Relogio de Ponto que esta rodando escondido.
-REM  Use quando tiver subido pelo INICIAR-SEM-JANELA.vbs.
+REM  Desligar o Relogio de Ponto
+REM
+REM  ARQUIVO UNICO: o PowerShell que faz o trabalho esta aqui dentro mesmo,
+REM  depois da marca :::PS:::. O .bat le a si proprio, corta tudo ate a marca
+REM  e executa o resto. Assim nao ha um segundo arquivo para perder de vista.
 REM ===========================================================================
 
 title Desligar o Relogio de Ponto
 cd /d "%~dp0"
+set "PASTA_RELOGIO=%~dp0"
 
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0parar.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$l = Get-Content -LiteralPath '%~f0'; $m = $l | Select-String -Pattern '^:::PS:::$' | Select-Object -First 1; if (-not $m) { Write-Host '  Arquivo incompleto - baixe de novo.' -ForegroundColor Red; exit 1 }; Invoke-Expression (($l | Select-Object -Skip $m.LineNumber) -join [Environment]::NewLine)"
 
+echo.
 pause
+exit /b
+
+:::PS:::
+<#
+    Desliga o Relogio de Ponto que esta rodando escondido.
+
+    Encerra apenas o node.exe que esta rodando o src\index.js DESTA pasta.
+    Outro programa em Node na mesma maquina nao e tocado.
+#>
+
+$ErrorActionPreference = 'SilentlyContinue'
+$raiz = $PSScriptRoot
+if (-not $raiz) { $raiz = $env:PASTA_RELOGIO }
+if (-not $raiz) { $raiz = (Get-Location).Path }
+$raiz = $raiz.TrimEnd('\')
+
+Write-Host ""
+Write-Host "  Procurando o Relogio de Ponto desta pasta..." -ForegroundColor White
+Write-Host "  $raiz" -ForegroundColor DarkGray
+Write-Host ""
+
+$processos = Get-CimInstance Win32_Process -Filter "Name = 'node.exe'" |
+             Where-Object {
+                 $_.CommandLine -and
+                 $_.CommandLine.Contains('src\index.js') -and
+                 $_.CommandLine.Contains($raiz)
+             }
+
+if ($processos) {
+    foreach ($p in $processos) {
+        Stop-Process -Id $p.ProcessId -Force
+        Write-Host "  [ok] desligado (processo $($p.ProcessId))" -ForegroundColor Green
+    }
+} else {
+    Write-Host "  [!]  Nao estava rodando." -ForegroundColor Yellow
+}
+
+# A tarefa agendada sobe o sistema de novo ao ligar o PC. Se ela existir,
+# avisamos - senao a pessoa desliga e ele "volta sozinho" sem explicacao.
+$tarefa = Get-ScheduledTask -TaskName 'RelogioDePonto'
+if ($tarefa) {
+    Write-Host ""
+    Write-Host "  Atencao: existe a tarefa 'RelogioDePonto', que sobe o sistema" -ForegroundColor Yellow
+    Write-Host "  sozinho ao ligar o computador. Situacao agora: $($tarefa.State)" -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "    parar so por enquanto:  Stop-ScheduledTask -TaskName RelogioDePonto" -ForegroundColor DarkGray
+    Write-Host "    nao subir mais:         Disable-ScheduledTask -TaskName RelogioDePonto" -ForegroundColor DarkGray
+    Write-Host "    voltar a subir:         Enable-ScheduledTask -TaskName RelogioDePonto" -ForegroundColor DarkGray
+}
+
+Write-Host ""

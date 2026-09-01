@@ -6,7 +6,10 @@
 #>
 
 $ErrorActionPreference = 'SilentlyContinue'
-$raiz = Split-Path -Parent $MyInvocation.MyCommand.Path
+$raiz = $PSScriptRoot
+if (-not $raiz) { $raiz = $env:PASTA_RELOGIO }
+if (-not $raiz) { $raiz = (Get-Location).Path }
+$raiz = $raiz.TrimEnd('\')
 
 Write-Host ""
 Write-Host "  Procurando o Relogio de Ponto desta pasta..." -ForegroundColor White

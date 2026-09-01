@@ -59,6 +59,9 @@ LEITOR BIOMETRICO
   (costuma estar, se o leitor ja serve a outro sistema) e qual programa
   esta com o leitor aberto agora.
 
+  Esse arquivo funciona sozinho, em qualquer pasta. Nao precisa de
+  nenhum outro arquivo ao lado.
+
   Para ligar o leitor Hamster DX, veja:  agente-biometrico\nitgen\README.md
 
 ANTES DE VALER PARA A FISCALIZACAO
