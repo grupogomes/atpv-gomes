@@ -18,7 +18,17 @@ COMO INSTALAR
 
 COMO USAR NO DIA A DIA
 
-  Clique duas vezes em  INICIAR.bat
+  Com a janela preta na tela ....  INICIAR.bat
+  Sem janela nenhuma ............  INICIAR-SEM-JANELA.vbs
+  Para desligar .................  PARAR.bat
+
+  A janela preta nao e enfeite: ela e o sistema. Fechando, o ponto para.
+  Se preferir nao ve-la, use o INICIAR-SEM-JANELA.vbs - o sistema roda
+  igual, so que escondido, e o PARAR.bat desliga.
+
+  Se voce respondeu SIM a "subir junto com o Windows" na instalacao, o
+  sistema ja sobe sozinho ao ligar o PC, sem janela. Nesse caso nao
+  precisa clicar em nada.
 
   Terminal de ponto ...  http://localhost:3000/kiosk/
   Administracao ......   http://localhost:3000/admin/
@@ -43,6 +53,11 @@ LEITOR BIOMETRICO
 
   O sistema comeca em MODO DE TESTE, sem leitor: no lugar da digital voce
   digita uma palavra. Da para conferir tudo assim.
+
+  Antes de instalar qualquer coisa, clique duas vezes em
+  VERIFICAR-LEITOR.bat: ele diz se o SDK da NITGEN ja esta na maquina
+  (costuma estar, se o leitor ja serve a outro sistema) e qual programa
+  esta com o leitor aberto agora.
 
   Para ligar o leitor Hamster DX, veja:  agente-biometrico\nitgen\README.md
 

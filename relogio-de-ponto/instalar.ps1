@@ -243,11 +243,17 @@ if ($r.ToLower() -ne 'n') {
     $gatilho = New-ScheduledTaskTrigger -AtStartup
     $config  = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries `
                -DontStopIfGoingOnBatteries -StartWhenAvailable -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
+    # Roda como SYSTEM: sobe junto com o Windows, antes de qualquer login, e
+    # SEM JANELA PRETA na tela. Sem este principal a tarefa fica presa ao
+    # usuario logado e o gatilho "ao ligar o PC" nao dispara de verdade.
+    $principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
     try {
         Register-ScheduledTask -TaskName 'RelogioDePonto' -Action $acao -Trigger $gatilho `
-            -Settings $config -RunLevel Highest -Force | Out-Null
+            -Settings $config -Principal $principal -Force | Out-Null
         Ok "tarefa 'RelogioDePonto' criada"
+        Ok "o sistema sobe sozinho ao ligar o PC, sem janela na tela"
         Write-Host "     iniciar agora:  Start-ScheduledTask -TaskName RelogioDePonto" -ForegroundColor DarkGray
+        Write-Host "     parar:          Stop-ScheduledTask -TaskName RelogioDePonto" -ForegroundColor DarkGray
         Write-Host "     remover:        Unregister-ScheduledTask -TaskName RelogioDePonto" -ForegroundColor DarkGray
     } catch {
         Aviso "Nao foi possivel criar a tarefa: $($_.Exception.Message)"

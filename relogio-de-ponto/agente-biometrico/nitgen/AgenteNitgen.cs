@@ -31,6 +31,14 @@ class AgenteNitgen
     static string modelo = "NITGEN";
     static bool dispositivoAberto = false;
 
+    // Modo convivencia (padrao). O eNBSP abre o leitor em modo EXCLUSIVO:
+    // enquanto o agente o mantiver aberto, nenhum outro programa consegue
+    // usa-lo. Como o mesmo leitor costuma servir a outro sistema da empresa,
+    // por padrao abrimos so durante a captura e soltamos logo depois.
+    // Com --segurar-leitor o agente mantem aberto (captura um pouco mais
+    // rapida, mas o leitor fica cativo).
+    static bool segurarLeitor = false;
+
     // Tempo maximo, em milissegundos, que o leitor fica esperando um dedo.
     const int TimeoutPadrao = 20000;
 
@@ -38,10 +46,17 @@ class AgenteNitgen
     {
         int porta = 9010;
         foreach (string a in args)
+        {
             if (a.StartsWith("--porta=")) int.TryParse(a.Substring(8), out porta);
+            if (a == "--segurar-leitor") segurarLeitor = true;
+        }
 
         Console.WriteLine("Agente biometrico NITGEN");
-        if (!AbrirLeitor())
+
+        // Abre uma vez so para dizer se o leitor existe, e solta em seguida.
+        bool achou = AbrirLeitor();
+        if (!segurarLeitor) LiberarLeitor();
+        if (!achou)
             Console.WriteLine("  ATENCAO: leitor nao encontrado. O agente sobe assim mesmo");
         Console.WriteLine("  e tenta reabrir a cada requisicao (util se o USB cair).");
 
@@ -57,7 +72,10 @@ class AgenteNitgen
         }
 
         Console.WriteLine("  no ar em http://127.0.0.1:" + porta);
-        Console.WriteLine("  leitor: " + modelo + (dispositivoAberto ? " (pronto)" : " (ausente)"));
+        Console.WriteLine("  leitor: " + modelo + (achou ? " (pronto)" : " (ausente)"));
+        Console.WriteLine(segurarLeitor
+            ? "  modo: leitor CATIVO — outro programa nao vai conseguir usa-lo"
+            : "  modo: convivencia — o leitor so fica ocupado durante a captura");
         Console.WriteLine("  Ctrl+C encerra.");
 
         while (servidor.IsListening)
@@ -95,6 +113,65 @@ class AgenteNitgen
         }
     }
 
+    /// <summary>
+    /// Solta o leitor para que outro programa possa usa-lo. Sem isto, o
+    /// sistema de vistoria (ou qualquer outro que fale com o mesmo aparelho)
+    /// fica sem leitor enquanto o agente estiver no ar.
+    /// </summary>
+    static void LiberarLeitor()
+    {
+        lock (trava)
+        {
+            if (!dispositivoAberto) return;
+            // >>> CONFERIR: em algumas versoes e CloseDevice(DEVICE_ID.AUTO).
+            try { api.CloseDevice(); } catch (Exception e) { Console.WriteLine("[leitor] " + e.Message); }
+            dispositivoAberto = false;
+        }
+    }
+
+    /// <summary>
+    /// Garante o objeto do SDK sem abrir o aparelho. A comparacao de
+    /// digitais (VerifyMatch) e feita em memoria e nao precisa do leitor.
+    /// </summary>
+    static bool GarantirApi()
+    {
+        lock (trava)
+        {
+            try { if (api == null) api = new NBioAPI(); return true; }
+            catch (Exception e) { Console.WriteLine("[sdk] " + e.Message); return false; }
+        }
+    }
+
+    /// <summary>
+    /// Diz se ha leitor plugado SEM tomar posse dele. O quiosque consulta
+    /// isto a cada 20 segundos; se abrissemos o aparelho a cada consulta,
+    /// brigariamos o dia inteiro com o outro programa.
+    /// </summary>
+    static bool LeitorPresente()
+    {
+        lock (trava)
+        {
+            if (dispositivoAberto) return true;
+            if (!GarantirApi()) return false;
+            try
+            {
+                // >>> CONFERIR: nome e assinatura de EnumerateDevice variam
+                // entre versoes. Enumerar NAO abre o aparelho.
+                NBioAPI.Type.DEVICE_ID[] lista;
+                int quantos;
+                uint r = api.EnumerateDevice(out quantos, out lista);
+                return (r == NBioAPI.Error.NONE && quantos > 0);
+            }
+            catch (Exception)
+            {
+                // Sem enumeracao disponivel, so resta abrir e soltar.
+                bool abriu = AbrirLeitor();
+                if (abriu && !segurarLeitor) LiberarLeitor();
+                return abriu;
+            }
+        }
+    }
+
     // -----------------------------------------------------------------------
     // Rotas
     // -----------------------------------------------------------------------
@@ -113,11 +190,13 @@ class AgenteNitgen
 
     static void Status(HttpListenerContext ctx)
     {
-        bool pronto = AbrirLeitor();
+        bool pronto = LeitorPresente();
         Responder(ctx, 200, "{"
             + "\"disponivel\":" + (pronto ? "true" : "false") + ","
             + "\"modelo\":" + Json(modelo) + ","
-            + "\"detalhe\":" + Json(pronto ? "eNBSP SDK" : "leitor nao encontrado")
+            + "\"detalhe\":" + Json(pronto
+                ? (segurarLeitor ? "eNBSP SDK (leitor cativo)" : "eNBSP SDK (livre entre capturas)")
+                : "leitor nao encontrado")
             + "}");
     }
 
@@ -168,15 +247,19 @@ class AgenteNitgen
             finally
             {
                 if (hFIR != null) { try { api.FreeFIRHandle(hFIR); } catch { } }
+                // Devolve o leitor a quem mais precisar dele.
+                if (!segurarLeitor) LiberarLeitor();
             }
         }
     }
 
     static void Identificar(HttpListenerContext ctx)
     {
-        if (!AbrirLeitor())
+        // Aqui so comparamos templates ja capturados: e conta em memoria.
+        // Nao abrimos o leitor, para nao disputa-lo com o outro programa.
+        if (!GarantirApi())
         {
-            Responder(ctx, 200, "{\"encontrado\":false,\"erro\":\"leitor indisponivel\"}");
+            Responder(ctx, 200, "{\"encontrado\":false,\"erro\":\"SDK indisponivel\"}");
             return;
         }
 
